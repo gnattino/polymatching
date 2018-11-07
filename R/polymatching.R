@@ -36,6 +36,35 @@
 #'
 #' @export
 
+
 polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small.to.large", iterate = T, niter_max = 50, verbose = T) {
+
+  #Debug/devel:
+  #------------
+  # source("C:/Users/natt03/Documents/R/temp.R")
+  # formulaMatch <- (group~variable)
+  # data <- generateData(c(30,10,40,20))
+  # distance = "euclidean"
+  # start = "small.to.large"
+  # iterate = T
+  # niter_max = 50
+  # verbose = T
+
+  #Check types of inputs
+  checkInputs(formulaMatch, data, distance, start, iterate, niter_max, verbose)
+
+  #Check coherence of data
+  resultCheckData <- checkData(formulaMatch, data, start)
+  varGroup <- resultCheckData$varGroup
+  varsMatch <- resultCheckData$varsMatch
+  vectorScheme <- resultCheckData$vectorScheme
+
+  if( is.null(vectorScheme)) {
+    #start from provided matched set
+  } else {
+    #generate  starting point
+  }
+
+
 
 }
