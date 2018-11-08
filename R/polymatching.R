@@ -57,18 +57,24 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
   resultCheckData <- checkData(formulaMatch, data, start)
   varGroup <- resultCheckData$varGroup
   varsMatch <- resultCheckData$varsMatch
-  vectorScheme <- resultCheckData$vectorScheme
+  vectorSchemeStart <- resultCheckData$vectorSchemeStart
 
   data <- data[,c(varGroup,varsMatch)]
 
+  #Define an id to sort observations in order provided
+  data$idUnits <- 1:nrow(data)
+
   if(distance == "mahalanobis") {
-    Sigma <- cov(dataStep[,varsMatch])
+    Sigma <- cov(matrix(data[,varsMatch], ncol = length(varsMatch)))
   } else {
     Sigma <- NULL
   }
 
+  #First: generate and evaluate starting point
+  #-------------------------------------------
+
   #IF: starting matched dataset provided
-  if( is.null(vectorScheme)) {
+  if( is.null(vectorSchemeStart)) {
 
     data$match_id <- start
 
@@ -77,29 +83,38 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
                                          distance, Sigma)
     total_distance_start <- resultEvaluation$total_distance
 
+
+    tabGroup <- table(data[,varGroup])
+    vectorSchemeIter <- names(sort(tabGroup))
+
   #ELSE: starting matched dataset must be constructed
   } else {
 
-    numGroups <- length(vectorScheme)
+    numGroups <- length(vectorSchemeStart)
 
     #First step: select units in first group
-    data1 <- data[data[,varGroup] %in% vectorScheme[1], ]
+    data1 <- data[data[,varGroup] %in% vectorSchemeStart[1], ]
 
     #Each unit is a matched set with 1 element
     data1$indexMatch1 <- NA
-    data1$indexMatch1[data1[,varGroup] %in% vectorScheme[1]] <- 1:nrow(data1)
+    data1$indexMatch1[data1[,varGroup] %in% vectorSchemeStart[1]] <- 1:nrow(data1)
 
     for(i in 2:numGroups) {
 
       #Next step: select units from the next group
-      data2 <- data[data[,varGroup] %in% vectorScheme[i], ]
+      data2 <- data[data[,varGroup] %in% vectorSchemeStart[i], ]
 
       #Each unit is a matched set with 1 element
       data2$indexMatch2 <- NA
-      data2$indexMatch2[data2[,varGroup] %in% vectorScheme[i]] <- 1:nrow(data2)
+      data2$indexMatch2[data2[,varGroup] %in% vectorSchemeStart[i]] <- 1:nrow(data2)
+
+      #Before combining the dataset, variables need to be the same
+      data2$indexMatch1 <- NA
+      data1$indexMatch2 <- NA
 
       #Append data of new group to previous data
       dataStep <- rbind(data1, data2)
+
 
       #Optimally match unit of data2 to matched sets in data1
       resultStep <- condOptMatching(data = dataStep,
@@ -121,12 +136,86 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
 
     data <- dataStep
     data$match_id <- data$indexMatch1
-    data$indexMatch1 < NULL
+    data$indexMatch1 <- NULL
 
     total_distance_start <- resultStep$total_distance
+    vectorSchemeIter <- vectorSchemeStart
 
   }
 
 
 
+  #################################
+  # HERE: add verbose output here #
+  # and in iterations             #
+  #################################
+
+
+
+
+
+  #Second: iterations
+  #-------------------
+
+  if(iterate) {
+
+    best_total_distance <- total_distance_start
+    best_match_id <- data$match_id
+
+    for(niter in 1:niter_max) {
+
+      data$match_id <- best_match_id
+
+      improvementInIteration <- F
+
+      for(iGroupStepIter2 in 1:length(vectorSchemeIter)) {
+
+        groupStepIter2 <- vectorSchemeIter[iGroupStepIter2]
+        groupsStepIter1 <- setdiff(vectorSchemeIter, groupStepIter2)
+
+        #Relax connection to groupStepIter2
+        data$indexMatchIter1 <- data$match_id
+        data$indexMatchIter1[data[,varGroup] %in% groupStepIter2] <- NA
+
+        data$indexMatchIter2 <- NA
+        data$indexMatchIter2[data[,varGroup] %in% groupStepIter2] <- 1:sum(data[,varGroup] %in% groupStepIter2)
+
+        #Rematch groupsStepIter1 to groupStepIter2
+        resultIter <- condOptMatching(data = data,
+                                      varIndexMatch1 = "indexMatchIter1",
+                                      varIndexMatch2 = "indexMatchIter2",
+                                      varsMatch = varsMatch,
+                                      varGroup = varGroup,
+                                      distance = distance,
+                                      Sigma = Sigma)
+
+        if(resultIter$total_distance < best_total_distance) {
+          best_match_id <- resultIter$match_id
+          best_total_distance <- resultIter$total_distance
+          improvementInIteration <- T
+        }
+
+      }
+
+      if(improvementInIteration == F) {
+        break;
+      }
+
+    }
+
+  } else {
+
+    total_distance <- total_distance_start
+    niter <- 1
+
+  }
+
+  if(iterate == T & niter>=niter_max) {
+    warning("The algorithm reached the maximum number of iterations--you can increase it with the argument 'niter_max'")
+  }
+
+  return(list(match_id = best_match_id[order(data$idUnits)],
+              total_distance = best_total_distance,
+              niter = niter,
+              total_distance_start = total_distance_start))
 }

@@ -6,6 +6,10 @@ checkInputs <- function(formulaMatch, data, distance, start, iterate, niter_max,
     stop("'formulaMatch' must be of class 'formula'")
   }
 
+  if( length(start)>1 & length(start)<nrow(data)) {
+    stop("'start' must be either a character string or a vector of length nrow(data)")
+  }
+
 }
 
 #Check coherence of inputs with data
@@ -19,25 +23,29 @@ checkData <- function(formulaMatch, data, start){
     stop("The dataset provided must contain all the variables in 'formulaMatch'")
   }
 
+  if( sum(is.na(data[,varGroup])) > 0 ) {
+    stop(paste0("The variable with the treatment groups (",varGroup,") cannot have missing values"))
+  }
+
   if("character" %in% class(start) & length(start)==1) {
 
     tabGroup <- table(data[,varGroup])
 
     if(start == "small.to.large") {
 
-      vectorScheme <- names(sort(tabGroup))
+      vectorSchemeStart <- names(sort(tabGroup))
 
     } else {
 
-      vectorScheme <- unlist(strsplit(start, split = "-"))
+      vectorSchemeStart <- unlist(strsplit(start, split = "-"))
 
-      if(length(vectorScheme) != length(tabGroup)) {
+      if(length(vectorSchemeStart) != length(tabGroup)) {
         stop(paste0("'start' must contain the labels of ",length(tabGroup),
                     " groups separated by '-' (e.g.: '",
                     paste(names(sort(tabGroup)), collapse = "-"),"')"))
       }
 
-      if(!all(sort(names(tabGroup)) == sort(vectorScheme))) {
+      if(!all(sort(names(tabGroup)) == sort(vectorSchemeStart))) {
         stop("The group labels in 'start' do not coincide with the group labels in the data")
       }
 
@@ -45,17 +53,28 @@ checkData <- function(formulaMatch, data, start){
 
   } else {
 
-    vectorScheme <- NULL
+    vectorSchemeStart <- NULL
 
   }
 
   if(length(start) > 1) {
 
-    # Check that the starting point has 1 subject per group
+    # Check that the starting point has exactly 1 subject per group
+    tabStartGroup <- table(start, data[,varGroup])
+    if(!all(tabStartGroup==1)) {
+      stop("The matched sets provided in 'start' must have exactly one subject per group")
+    }
+
+    #Check that all the subjects in the smallest group(s) are matched
+    smallestGroups <- names(tabGroup)[tabGroup==min(tabGroup)]
+    if( sum(is.na(start[data[,varGroup] %in% smallestGroups]))>0) {
+      stop("All of the subjects in the smallest group(s) must be matched in the starting point provided in 'start'")
+    }
+
 
   }
 
   return(list(varGroup = varGroup,
               varsMatch = varsMatch,
-              vectorScheme = vectorScheme))
+              vectorSchemeStart = vectorSchemeStart))
 }

@@ -1,8 +1,3 @@
-
-# euclideanDistance <- function(A,B) {
-#   return(sqrt(sum((A-B)^2)))
-# }
-
 #Distance between two units
 pairwiseDistance <- function(A, B, distance, Sigma) {
 
@@ -11,7 +6,7 @@ pairwiseDistance <- function(A, B, distance, Sigma) {
   }
 
   if(distance=="mahalanobis") {
-    output <- mahalanobis(x = A, center = B, cov = Sigma)
+    output <- sqrt(mahalanobis(x = A, center = B, cov = Sigma))
   }
 
   return(output)
@@ -68,11 +63,21 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #Local function for conditional matching:
   #----------------------------------------
   applyPersonalDistance <- function(index, data, z) {
+    #browser()
 
     indexDf <- as.data.frame(index, stringsAsFactors = F)
     groupTreated <- unique(data[z,varGroup])
     groupControls <- unique(data[!z,varGroup])
     names(indexDf) <- paste("group",c(groupTreated,groupControls), sep ="")
+
+    #I can't pass additional arguments to the function 'applyPersonalDistance' through 'match_on',
+    # 'match_on' passes ... to internal functions. To access to other objects, I need to take them
+    # directly from the parent envirormnet, which is the environment where the function 'applyPersonalDistance' lives.
+    #Grab objects from "outside the function":
+    envDataAll <- environment(applyPersonalDistance)
+    dataAll <- get("dataAll",envir = envDataAll)
+    Sigma <- get("Sigma",envir = envDataAll)
+    distance <- get("distance",envir = envDataAll)
 
     #Wide format for:
 
@@ -127,14 +132,31 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                                                                       sep = "")],varsMatch]
     }
 
+    #Sum the pairwise distances within matched sets
     pairGroups <- combn(c(groups1, groups2), 2)
     distances <- rep(0, nrow(indexDf))
 
+    #For Mahalanobis distance, need the inverse of Sigma
+    if(distance == "mahalanobis") {
+      SigmaInv <- try(chol2inv(chol(Sigma)), silent = T)
+      if(class(a)=="try-error") {
+        stop("Problems in the computation of Mahalanobis distance, error inverting vcov matrix. Try using distance='euclidean'. ")
+      }
+    }
+
     for(indexPair in 1:ncol(pairGroups)) {
+
       pairGroupsTemp <- pairGroups[,indexPair]
-      distances <- (distances +
-                      sqrt(rowSums(as.matrix((indexDf[,paste("group",pairGroupsTemp[1],"_",varsMatch,sep="")] -
-                                                indexDf[,paste("group",pairGroupsTemp[2],"_",varsMatch,sep="")])^2))))
+
+      matrixTemp <- as.matrix((indexDf[,paste("group",pairGroupsTemp[1],"_",varsMatch,sep="")] -
+                                 indexDf[,paste("group",pairGroupsTemp[2],"_",varsMatch,sep="")]))
+
+      if(distance == "euclidean") {
+        distances <- (distances + sqrt(rowSums(matrixTemp^2)))
+      }
+      if(distance == "mahalanobis") {
+        distances <- (distances + sqrt((matrixTemp %*% SigmaInv) * matrixTemp))
+      }
 
     }
 
@@ -169,11 +191,11 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #Global variables to be used in the function 'applyPersonalDistance'
   dataAll <-  data
 
-  resultDistance <- match_on(applyPersonalDistance,
+  resultDistance <- optmatch::match_on(applyPersonalDistance,
                              z = data$groupNew[selectionToMatch],
                              data = data[selectionToMatch,])
 
-  resultMatch <- pairmatch(resultDistance,
+  resultMatch <- optmatch::pairmatch(resultDistance,
                            controls = 1,
                            data = data[selectionToMatch,])
 
@@ -184,7 +206,6 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #-----------------
 
   indexMatchesInGroup1 <- !is.na(data$indexResultMatch) & !is.na(data[,varIndexMatch1])
-
 
   data$indexMatch <- NA
   matchedCounter <- 0
@@ -201,9 +222,11 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   }
 
-  resultEvaluation <- evaluateMatching(data, "indexMatch", varsMatch)
-
-  data$groupNew <- data$indexResultMatch <- NULL
+  resultEvaluation <- evaluateMatching(data,
+                                       varIndexMatch = "indexMatch",
+                                       varsMatch = varsMatch,
+                                       distance = distance,
+                                       Sigma = Sigma)
 
   return(list(total_distance = resultEvaluation$total_distance,
               match_id = data$indexMatch))
