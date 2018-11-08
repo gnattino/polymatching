@@ -51,9 +51,7 @@ checkData <- function(formulaMatch, data, start){
 
   if(length(start) > 1) {
 
-
     # Check that the starting point has 1 subject per group
-
 
   }
 

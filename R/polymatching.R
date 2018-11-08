@@ -59,10 +59,72 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
   varsMatch <- resultCheckData$varsMatch
   vectorScheme <- resultCheckData$vectorScheme
 
-  if( is.null(vectorScheme)) {
-    #start from provided matched set
+  data <- data[,c(varGroup,varsMatch)]
+
+  if(distance == "mahalanobis") {
+    Sigma <- cov(dataStep[,varsMatch])
   } else {
-    #generate  starting point
+    Sigma <- NULL
+  }
+
+  #IF: starting matched dataset provided
+  if( is.null(vectorScheme)) {
+
+    data$match_id <- start
+
+    #Evaluate total distance at starting condition
+    resultEvaluation <- evaluateMatching(data, "match_id", varsMatch,
+                                         distance, Sigma)
+    total_distance_start <- resultEvaluation$total_distance
+
+  #ELSE: starting matched dataset must be constructed
+  } else {
+
+    numGroups <- length(vectorScheme)
+
+    #First step: select units in first group
+    data1 <- data[data[,varGroup] %in% vectorScheme[1], ]
+
+    #Each unit is a matched set with 1 element
+    data1$indexMatch1 <- NA
+    data1$indexMatch1[data1[,varGroup] %in% vectorScheme[1]] <- 1:nrow(data1)
+
+    for(i in 2:numGroups) {
+
+      #Next step: select units from the next group
+      data2 <- data[data[,varGroup] %in% vectorScheme[i], ]
+
+      #Each unit is a matched set with 1 element
+      data2$indexMatch2 <- NA
+      data2$indexMatch2[data2[,varGroup] %in% vectorScheme[i]] <- 1:nrow(data2)
+
+      #Append data of new group to previous data
+      dataStep <- rbind(data1, data2)
+
+      #Optimally match unit of data2 to matched sets in data1
+      resultStep <- condOptMatching(data = dataStep,
+                                    varIndexMatch1 = "indexMatch1",
+                                    varIndexMatch2 = "indexMatch2",
+                                    varsMatch = varsMatch,
+                                    varGroup = varGroup,
+                                    distance = distance,
+                                    Sigma = Sigma)
+
+      #Erase ids of previous matching step
+      dataStep$indexMatch1 <- dataStep$indexMatch2 <- NULL
+
+      #Id of new matching step.
+      dataStep$indexMatch1 <- resultStep$match_id
+      data1 <- dataStep
+
+    }
+
+    data <- dataStep
+    data$match_id <- data$indexMatch1
+    data$indexMatch1 < NULL
+
+    total_distance_start <- resultStep$total_distance
+
   }
 
 
