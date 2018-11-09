@@ -19,6 +19,8 @@ checkData <- function(formulaMatch, data, start){
   varGroup <- varsFromFormula[1]
   varsMatch <- varsFromFormula[2:length(varsFromFormula)]
 
+  tabGroup <- table(data[,varGroup])
+
   if( ! all(varsFromFormula %in% names(data)) ) {
     stop("The dataset provided must contain all the variables in 'formulaMatch'")
   }
@@ -28,8 +30,6 @@ checkData <- function(formulaMatch, data, start){
   }
 
   if("character" %in% class(start) & length(start)==1) {
-
-    tabGroup <- table(data[,varGroup])
 
     if(start == "small.to.large") {
 

@@ -58,12 +58,11 @@ evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 #to matching variables 'varsMatch'.
 condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
-                            distance, Sigma) {
+                            distance, Sigma, niter=1) {
 
   #Local function for conditional matching:
   #----------------------------------------
   applyPersonalDistance <- function(index, data, z) {
-    #browser()
 
     indexDf <- as.data.frame(index, stringsAsFactors = F)
     groupTreated <- unique(data[z,varGroup])
@@ -165,6 +164,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   #---------------------------------------------------------------------------------------------
 
+
   groups1 <- sort(unique(data[!is.na(data[,varIndexMatch1]), varGroup]))
   groups2 <- sort(unique(data[!is.na(data[,varIndexMatch2]), varGroup]))
 
@@ -175,6 +175,9 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                           (data[,varGroup] %in% groups2[1] & !is.na(data[,varIndexMatch2])) )
 
   #Generate new variable that define the "bipartite" groups
+  if(niter>1) {browser()}
+
+
   data$groupNew <- NA
   data$groupNew[data[,varGroup] %in% groups1] <- paste(groups1, collapse = "")
   data$groupNew[data[,varGroup] %in% groups2] <- paste(groups2, collapse = "")

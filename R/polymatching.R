@@ -42,7 +42,7 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
   #Debug/devel:
   #------------
   # source("C:/Users/natt03/Documents/R/temp.R")
-  # formulaMatch <- (group~variable)
+  # formulaMatch <- (groupF~variable)
   # data <- generateData(c(30,10,40,20))
   # distance = "euclidean"
   # start = "small.to.large"
@@ -59,7 +59,14 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
   varsMatch <- resultCheckData$varsMatch
   vectorSchemeStart <- resultCheckData$vectorSchemeStart
 
+  #Select variables of interest
   data <- data[,c(varGroup,varsMatch)]
+
+  #Make grouping variable as character
+  data[,varGroup] <- as.character(data[,varGroup])
+
+  #Number of groups
+  numGroups <- length(table(data[,varGroup]))
 
   #Define an id to sort observations in order provided
   data$idUnits <- 1:nrow(data)
@@ -68,6 +75,15 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
     Sigma <- cov(matrix(data[,varsMatch], ncol = length(varsMatch)))
   } else {
     Sigma <- NULL
+  }
+
+  # Say some stuff
+  if(verbose==T) {
+
+    cat("Conditional optimal matching algorithm\n")
+    cat("Number of observations: ",nrow(data),"\n")
+    cat("Number of groups: ",numGroups,"\n")
+    #cat("\n")
   }
 
   #First: generate and evaluate starting point
@@ -90,8 +106,6 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
   #ELSE: starting matched dataset must be constructed
   } else {
 
-    numGroups <- length(vectorSchemeStart)
-
     #First step: select units in first group
     data1 <- data[data[,varGroup] %in% vectorSchemeStart[1], ]
 
@@ -100,6 +114,7 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
     data1$indexMatch1[data1[,varGroup] %in% vectorSchemeStart[1]] <- 1:nrow(data1)
 
     for(i in 2:numGroups) {
+
 
       #Next step: select units from the next group
       data2 <- data[data[,varGroup] %in% vectorSchemeStart[i], ]
@@ -143,24 +158,19 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
 
   }
 
-
-
-  #################################
-  # HERE: add verbose output here #
-  # and in iterations             #
-  #################################
-
-
-
-
+  # Say some stuff
+  if(verbose==T) {
+    cat("Total distance of starting matched sample: ", sprintf("%.10f",total_distance_start),"\n")
+    #cat("\n")
+  }
 
   #Second: iterations
   #-------------------
 
-  if(iterate) {
+  best_total_distance <- total_distance_start
+  best_match_id <- data$match_id
 
-    best_total_distance <- total_distance_start
-    best_match_id <- data$match_id
+  if(iterate) {
 
     for(niter in 1:niter_max) {
 
@@ -187,9 +197,13 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
                                       varsMatch = varsMatch,
                                       varGroup = varGroup,
                                       distance = distance,
-                                      Sigma = Sigma)
+                                      Sigma = Sigma,
+                                      niter = niter)
 
         if(resultIter$total_distance < best_total_distance) {
+
+          #if(niter==3) {browser()}
+
           best_match_id <- resultIter$match_id
           best_total_distance <- resultIter$total_distance
           improvementInIteration <- T
@@ -201,6 +215,13 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
         break;
       }
 
+      # Say some stuff
+      if(verbose==T) {
+        cat("Ended iteration ", niter, " - total distance:", sprintf("%.10f",best_total_distance),"\n")
+        #cat("\n")
+      }
+
+
     }
 
   } else {
@@ -209,6 +230,8 @@ polymatch <- function(formulaMatch, data, distance = "euclidean", start = "small
     niter <- 1
 
   }
+  cat("End \n")
+  cat("Number of iterations: ", niter, ", total distance:", sprintf("%.3f",best_total_distance),"\n" )
 
   if(iterate == T & niter>=niter_max) {
     warning("The algorithm reached the maximum number of iterations--you can increase it with the argument 'niter_max'")
