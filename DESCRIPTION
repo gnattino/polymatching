@@ -9,5 +9,7 @@ Description: Includes function for conditionally optimal matching, a matching al
     generate matched sample in designs with 3, 4, 5 and 6 groups. 
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
-Imports: optmatch
+LazyData: TRUE
+Imports: optmatch, ggplot2
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
