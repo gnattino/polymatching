@@ -58,11 +58,13 @@ evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 #to matching variables 'varsMatch'.
 condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
-                            distance, Sigma, niter=1) {
+                            distance, Sigma) {
 
   #Local function for conditional matching:
   #----------------------------------------
   applyPersonalDistance <- function(index, data, z) {
+
+    #browser()
 
     indexDf <- as.data.frame(index, stringsAsFactors = F)
     groupTreated <- unique(data[z,varGroup])
@@ -138,7 +140,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     #For Mahalanobis distance, need the inverse of Sigma
     if(distance == "mahalanobis") {
       SigmaInv <- try(chol2inv(chol(Sigma)), silent = T)
-      if(class(a)=="try-error") {
+      if(class(SigmaInv)=="try-error") {
         stop("Problems in the computation of Mahalanobis distance, error inverting vcov matrix. Try using distance='euclidean'. ")
       }
     }
@@ -154,7 +156,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
         distances <- (distances + sqrt(rowSums(matrixTemp^2)))
       }
       if(distance == "mahalanobis") {
-        distances <- (distances + sqrt((matrixTemp %*% SigmaInv) * matrixTemp))
+        distances <- (distances + sqrt(rowSums((matrixTemp %*% SigmaInv) * matrixTemp)))
       }
 
     }
@@ -175,9 +177,6 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                           (data[,varGroup] %in% groups2[1] & !is.na(data[,varIndexMatch2])) )
 
   #Generate new variable that define the "bipartite" groups
-  if(niter>1) {browser()}
-
-
   data$groupNew <- NA
   data$groupNew[data[,varGroup] %in% groups1] <- paste(groups1, collapse = "")
   data$groupNew[data[,varGroup] %in% groups2] <- paste(groups2, collapse = "")

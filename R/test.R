@@ -1,4 +1,4 @@
-source("R/polymatching.R")
+source("R/polymatch.R")
 source("R/controls.R")
 source("R/matching_functions.R")
 
@@ -39,68 +39,112 @@ generateData <- function(nVect, par = NULL) {
 # Check #
 #########
 
+
+#Check iterations
+set.seed(123456)
+dat <- generateData(c(100,100,100,100,100,100))
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                     distance = "euclidean",
+                     start = "1-2-3-4-5-6",
+                     iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5-6",
+                    iterate = F, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5-6",
+                    iterate = F, niter_max = 3, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5-6",
+                    iterate = T, niter_max = 3, verbose = T)
+
+#Verbose
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5-6",
+                    iterate = T, niter_max = 50, verbose = F)
+
+#Check distances
+set.seed(123456)
+dat <- data.frame(group = c(rep(1,10), rep(2,50), rep(3,50)),
+                  var1 = rnorm(110),
+                  var2 = rnorm(110)*1000)
+
+resultE <- polymatch(formulaMatch = group ~ var1 + var2, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3",
+                    iterate = T, niter_max = 50, verbose = T)
+
+resultM <- polymatch(formulaMatch = group ~ var1 + var2, data = dat,
+                     distance = "mahalanobis",
+                     start = "1-2-3",
+                     iterate = T, niter_max = 50, verbose = T)
+
+dat$match_idE <- resultE$match_id
+dat$match_idM <- resultM$match_id
+
+dat[dat$match_idE %in% 1,]
+dat[dat$match_idM %in% 1,]
+
+
+
+#Example with some numerical weird issues
+#----------------------------------------
+
+#When there is a very large overlap among the observations, the
+#optimal solution identified by package 'optmatch' is NOT always the same.
+#If the labels of the groups are held constant, the solution seems to be always the same.
+#However, if I relabel the name of the groups (e.g., "1-2-3-4-5" as "a-b-c-d-e") I might find
+#something slightly different. This bizarre result is reproduced below.
+
+#I give different names to the groups and run our algorithm. The optimal solution "seem" to be the same
+#in terms of total distance (it's probably a result of numerical rounding). BUT, the number of iterations is different,
+#even though we have the same starting point. AND, the final matched set is not the same in the two cases!
+
+#Run on R version 3.5.1
+set.seed(123456)
 dat <- generateData(c(100,100,100,100,100))
 
 dat$groupN <- dat$group
 dat$groupF <- factor(dat$group, levels = c(1:5),
                     labels = c("aaaa","asda","ACADDDDD","jkasdljads_dahskj","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
 
-data <- dat
-dataBKP <- dat
-
-
-dat$variable <- dat$variable*10000000
-
-result <- polymatch(formulaMatch = groupF ~ variable, data = dat,
-                distance = "euclidean", start = "aaaa-asda-ACADDDDD-jkasdljads_dahskj-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+resultF <- polymatch(formulaMatch = groupF ~ variable, data = dat,
+                distance = "euclidean",
+                start = "aaaa-asda-ACADDDDD-jkasdljads_dahskj-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 iterate = T, niter_max = 50, verbose = T)
 
-result <- polymatch(formulaMatch = groupN ~ variable, data = dat,
-                    distance = "euclidean", start = "1-2-3-4-5",
+resultN <- polymatch(formulaMatch = groupN ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5",
                     iterate = T, niter_max = 50, verbose = T)
 
+#Different number of iterations
+resultF$niter
+resultN$niter
 
-dataCondOpt$groupF <- factor(dataCondOpt$groupN, levels = c(1:5),
-                     labels = c("aaaa","asda","ACADDDDD","jkasdljads_dahskj","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-dataCondOpt$groupF <- as.character(dataCondOpt$groupF)
+#Different matched sets (I expect only 0s and 5s if the matched sets would be the same)
+table(table(resultF$match_id, resultN$match_id))
 
+#Example where anchor matching is poor (Bo Lu)
+#---------------------------------------------
 
-dataCondOpt$groupN <- factor(dataCondOpt$groupF, labels = c(1:5),
-                             levels = c("aaaa","asda","ACADDDDD","jkasdljads_dahskj","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-dataCondOpt$groupN <- as.numeric(as.character(dataCondOpt$groupN))
-
-
-resultIter <- condOptMatching(data = dataCondOpt,
-                              varIndexMatch1 = "indexMatchIter1",
-                              varIndexMatch2 = "indexMatchIter2",
-                              varsMatch = "variable",
-                              varGroup = "groupF",
-                              distance = "euclidean",
-                              Sigma = NULL,
-                              niter = 1000)
-
-sprintf("%.3f",resultIter$total_distance)
-
-resultIter <- condOptMatching(data = dataCondOpt,
-                              varIndexMatch1 = "indexMatchIter1",
-                              varIndexMatch2 = "indexMatchIter2",
-                              varsMatch = "variable",
-                              varGroup = "groupN",
-                              distance = "euclidean",
-                              Sigma = NULL,
-                              niter = 1000)
-
-
-#Example from dr. Lu
-dat <- data.frame(#group = c("A","A","B","B","B","C","C","C"),
-                  group = c(1,1,2,2,2,3,3,3),
+dat <- data.frame(group = c("A","A","B","B","B","C","C","C"),
                   variable = c(5,10,1,8,11,2,8,13))
 
 result <- polymatch(formulaMatch = group ~ variable, data = dat,
                     distance = "euclidean", start = "small.to.large",
                     iterate = T, niter_max = 50, verbose = T)
 
-#Understand:
-# - why different rseults when change labels of names?
-# - why can't find optimal solution in example?
+dat$match_id <- result$match_id
+
+#Optimal solution identified (5-8-8 and 10-11-13)
+dat
+
 
