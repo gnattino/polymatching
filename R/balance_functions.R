@@ -1,7 +1,7 @@
 #Check type of variable
 typeVariable <- function(variable) {
 
-  if(class(variable)=="numeric") {
+  if(class(variable) %in% c("numeric","integer")) {
 
     type <- "continuous"
 
@@ -69,7 +69,7 @@ balanceBinVar <- function(data, varBalance, match_id, varGroup, pairGroups){
   stdzDiff <- (means[names(means)==pairGroups[1]] - means[names(means)==pairGroups[2]])/(
                sqrt((vars[names(vars)==pairGroups[1]] + vars[names(vars)==pairGroups[2]])/2))
 
-  return(stdzDiff)
+  return(list(stdzDiff=stdzDiff))
 
 }
 
@@ -98,6 +98,6 @@ balanceCatVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
   stdzDiff <- sqrt(t(as.matrix(p1-p2)) %*% solve(S) %*% as.matrix(p1-p2))
 
-  return(stdzDiff)
+  return(list(stdzDiff=stdzDiff))
 
 }

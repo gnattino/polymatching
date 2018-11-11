@@ -1,6 +1,8 @@
 source("R/polymatch.R")
 source("R/controls.R")
 source("R/matching_functions.R")
+source("R/balance.R")
+source("R/balance_functions.R")
 
 ##########################################
 # Function to generate data to polymatch #
@@ -41,6 +43,7 @@ generateData <- function(nVect, par = NULL) {
 
 
 #Check iterations
+#----------------
 set.seed(123456)
 dat <- generateData(c(100,100,100,100,100,100))
 
@@ -71,6 +74,7 @@ result <- polymatch(formulaMatch = group ~ variable, data = dat,
                     iterate = T, niter_max = 50, verbose = F)
 
 #Check distances
+#----------------
 set.seed(123456)
 dat <- data.frame(group = c(rep(1,10), rep(2,50), rep(3,50)),
                   var1 = rnorm(110),
@@ -92,6 +96,28 @@ dat$match_idM <- resultM$match_id
 dat[dat$match_idE %in% 1,]
 dat[dat$match_idM %in% 1,]
 
+
+#Check balance
+#----------------
+set.seed(123456)
+dat <- generateData(c(100,200,200),
+                    par = list(means = c(0,0,2),
+                               sds = c(1,3,1)))
+dat$var1 <- factor(apply(rmultinom(nrow(data), size = 1 , prob = c(1/3,1/3,1/3)), FUN = function(x){which(x==1)},2))
+dat$var2 <- factor(rbinom(nrow(data), size = 1, prob =.3))
+dat$var3 <- rpois(nrow(data),lambda = 100)
+dat$var4 <- runif(nrow(data))
+
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                     distance = "euclidean",
+                     start = "1-2-3",
+                     iterate = T, niter_max = 50, verbose = T)
+
+resultBalance <- balance(group ~ variable + var1 + var2 + var3 + var4,
+                        data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plot.balanceCondOptMatch(resultBalance)
 
 
 #Example with some numerical weird issues

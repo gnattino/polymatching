@@ -39,9 +39,9 @@ balance <- function(formulaBalance, match_id, data) {
 
   #Debug/devel:
   #------------
-  # formulaBalance <- (group~var1+var2)
+  # formulaBalance <- (group~variable+var1)
   # data <- dat
-  # match_id = resultM$match_id
+  # match_id = result$match_id
 
   #Check types of inputs (same function used for polymatch - amend with useless arguments)
   checkInputs(formulaMatch = formulaBalance, data = data, start = match_id,
@@ -53,60 +53,73 @@ balance <- function(formulaBalance, match_id, data) {
   varGroup <- resultCheckData$varGroup
   varsBalance <- resultCheckData$varsMatch
 
-  dataBalance <- data.frame(variable = varsBalance,
-                            type = NA,
-                            stdzDiffPre = NA,
-                            ratioVarsPre = NA,
-                            stdzDiffPost = NA,
-                            ratioVarsPost = NA,
-                            stringsAsFactors = F)
 
   pairGroups <- combn(names(table(data[,varGroup])), 2)
+  pairsGroupsText <- apply(pairGroups, FUN = function(x) {paste(x, collapse = "-")},2)
 
-  for(i in 1:lenght(varsBalance)) {
+  #Generate a dataset to store the results of the balance: each variable has measure of balance
+  # for each pair of groups
+  dataBalance <- expand.grid(list(groups = pairsGroupsText,
+                                  variable = varsBalance),
+                             stringsAsFactors = F)
 
-    varBalance <- dataBalance$variable[i]
+  dataBalance$type <- NA
+  dataBalance$stdzDiffPre <- NA
+  dataBalance$ratioVarsPre <- NA
+  dataBalance$stdzDiffPost <- NA
+  dataBalance$ratioVarsPost <- NA
 
-    dataBalance$type[i] <- typeVariable(data[,varBalance])
+  for(indexVar in 1:length(varsBalance)) {
+
+    varBalance <- varsBalance[indexVar]
+
+    if(class(data[,varBalance]) == "character") {
+      data[,varBalance] <- factor(data[,varBalance])
+    }
+
+    typeVariableIter <- typeVariable(data[,varBalance])
+    dataBalance$type[dataBalance$variable %in% varBalance] <- typeVariableIter
 
     for(indexPair in 1:ncol(pairGroups)) {
 
-      if(dataBalance$type[i] == "continuous") {
+      selectionIter <- (dataBalance$groups %in% pairsGroupsText[indexPair] &
+                          dataBalance$variable %in% varBalance)
+      if(typeVariableIter == "continuous") {
 
         resultBalancePre <- balanceContVar(data = data, varBalance = varBalance, match_id = rep(1,nrow(data)),
                                             varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDifPre[i] <- resultBalancePre$stdzDiff
-        dataBalance$ratioVarsPre[i] <- resultBalancePre$ratioVarsPost
+        dataBalance$stdzDiffPre[selectionIter] <- resultBalancePre$stdzDiff
+        dataBalance$ratioVarsPre[selectionIter] <- resultBalancePre$ratioVars
 
         resultBalancePost <- balanceContVar(data = data, varBalance = varBalance, match_id = match_id,
                                         varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDifPost[i] <- resultBalancePost$stdzDiff
-        dataBalance$ratioVarsPost[i] <- resultBalancePost$ratioVarsPost
+        dataBalance$stdzDiffPost[selectionIter] <- resultBalancePost$stdzDiff
+        dataBalance$ratioVarsPost[selectionIter] <- resultBalancePost$ratioVars
 
       }
 
-      if(dataBalance$type[i] == "binary") {
+      if(typeVariableIter == "binary") {
 
         resultBalancePre <- balanceBinVar(data = data, varBalance = varBalance, match_id = rep(1,nrow(data)),
                                            varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDifPre[i] <- resultBalancePre$stdzDiff
+        dataBalance$stdzDiffPre[selectionIter] <- resultBalancePre$stdzDiff
 
         resultBalance <- balanceBinVar(data = data, varBalance = varBalance, match_id = match_id,
                                         varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDiff[i] <- resultBalance$stdzDiff
+        dataBalance$stdzDiffPost[selectionIter] <- resultBalance$stdzDiff
 
       }
 
-      if(dataBalance$type[i] == "categorical") {
+      if(typeVariableIter == "categorical") {
 
         resultBalancePre <- balanceCatVar(data = data, varBalance = varBalance, match_id = rep(1,nrow(data)),
                                           varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDifPre[i] <- resultBalancePre$stdzDiff
+        dataBalance$stdzDiffPre[selectionIter] <- resultBalancePre$stdzDiff
 
 
         resultBalance <- balanceCatVar(data = data, varBalance = varBalance, match_id = match_id,
                                        varGroup = varGroup, pairGroups = pairGroups[,indexPair])
-        dataBalance$stdzDiff[i] <- resultBalance$stdzDiff
+        dataBalance$stdzDiffPost[selectionIter] <- resultBalance$stdzDiff
 
       }
 
@@ -114,7 +127,6 @@ balance <- function(formulaBalance, match_id, data) {
     }
 
   }
-
 
   class(dataBalance) <- c(class(dataBalance), "balanceCondOptMatch")
 
@@ -158,6 +170,70 @@ balance <- function(formulaBalance, match_id, data) {
 #' plot(NA, NA)
 #'
 #' @export
-plot.balanceCondOptMatch <- function() {
+plot.balanceCondOptMatch <- function(dataBalance) {
 
+  #Data for standardized difference
+  keepVarsStdzDiff <- c("groups","variable","stdzDiffPre","stdzDiffPost")
+  dataBalanceStdzDiff <- tidyr::gather(dataBalance[,keepVarsStdzDiff],
+                                       key = pre_post,
+                                       value = stdzDiff, - variable, - groups)
+  dataBalanceStdzDiff$pre_post <- factor(dataBalanceStdzDiff$pre_post,
+                                         levels = c("stdzDiffPost","stdzDiffPre"),
+                                         labels = c("Post","Pre"))
+  dataBalanceStdzDiff$variable <- factor(dataBalanceStdzDiff$variable,
+                                         levels = unique(dataBalance$variable))
+  #Data for ratio of variances
+  keepVarsRatioVars <- c("groups","variable","ratioVarsPre","ratioVarsPost")
+  dataBalanceRatioVars <- tidyr::gather(dataBalance[dataBalance$type == "continuous",keepVarsRatioVars],
+                                       key = pre_post,
+                                       value = ratioVars, - variable, - groups)
+  dataBalanceRatioVars$pre_post <- factor(dataBalanceRatioVars$pre_post,
+                                         levels = c("ratioVarsPost","ratioVarsPre"),
+                                         labels = c("Post","Pre"))
+  dataBalanceRatioVars$variable <- factor(dataBalanceRatioVars$variable,
+                                          levels = unique(resultBalance$variable[dataBalance$type == "continuous"]))
+
+
+
+  plotStdzDiff <- ggplot2::ggplot(data = dataBalanceStdzDiff) +
+    ggplot2::geom_boxplot(ggplot2::aes(x = pre_post,
+                                       y = stdzDiff,
+                                       colour= pre_post)) +
+    ggplot2::geom_jitter(ggplot2::aes(x = pre_post,
+                                       y = stdzDiff,
+                                       colour= pre_post), size = 2) +
+    ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 1)  +
+    ggplot2::coord_flip() +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.title.y = ggplot2::element_blank()) +
+    ggplot2::labs(title="Standardized Differences Before and After Matching") +
+    ggplot2::ylab("Standardized Differences Before and After Matching") +
+    ggplot2::geom_hline(yintercept=0,  colour = "red", size = 1.2, linetype = "dashed") +
+    ggplot2::guides(fill=FALSE, colour = FALSE)
+
+
+  plotRatioVars <- ggplot2::ggplot(data = dataBalanceRatioVars) +
+    ggplot2::geom_boxplot(ggplot2::aes(x = pre_post,
+                                       y = ratioVars,
+                                       colour= pre_post))  +
+    ggplot2::geom_jitter(ggplot2::aes(x = pre_post,
+                                      y = ratioVars,
+                                      colour= pre_post), size = 2) +
+    ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 1)  +
+    ggplot2::coord_flip() +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.title.y = ggplot2::element_blank()) +
+    ggplot2::labs(title="Ratio of Variances Before and After Matching") +
+    ggplot2::ylab("Ratio of Variances") +
+    ggplot2::geom_hline(yintercept=1,  colour = "red", size = 1.2, linetype = "dashed") +
+    ggplot2::guides(fill=FALSE, colour = FALSE)
+
+
+  #Ideas: jittered point, jittered points on the same row,
+  # non-jittered points, jittered points on the same row
+
+  gridExtra::grid.arrange(plotStdzDiff, plotRatioVars, ncol = 2)
+
+  return(list(plotStdzDiff=plotStdzDiff,
+              plotRatioVars = plotRatioVars))
 }
