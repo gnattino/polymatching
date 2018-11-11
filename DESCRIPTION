@@ -10,6 +10,6 @@ Description: Includes function for conditionally optimal matching, a matching al
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
-Imports: optmatch, ggplot2
+Imports: optmatch, ggplot2, tidyr, gridExtra
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
