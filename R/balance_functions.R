@@ -35,16 +35,18 @@ balanceContVar <- function(data, varBalance, match_id, varGroup, pairGroups){
   #For difference in means, matched data
   dataMeans <- data[data[,varGroup] %in% pairGroups & !is.na(match_id), ]
   means <- tapply(dataMeans[,varBalance], INDEX = dataMeans[,varGroup], FUN = mean)
+  vars <- tapply(dataMeans[,varBalance], INDEX = dataMeans[,varGroup], FUN = var)
 
   #For variances, unmatched data
-  dataSds <- data[data[,varGroup] %in% pairGroups, ]
-  sds <- tapply(dataSds[,varBalance], INDEX = dataSds[,varGroup], FUN = sd)
-  vars <- sds^2
+  dataUnm <- data[data[,varGroup] %in% pairGroups, ]
+  varsUnm <- tapply(dataUnm[,varBalance], INDEX = dataUnm[,varGroup], FUN = var)
 
   stdzDiff <- (means[names(means)==pairGroups[1]] - means[names(means)==pairGroups[2]])/(
-                sqrt((vars[names(vars)==pairGroups[1]] + vars[names(vars)==pairGroups[2]])/2))
+                sqrt((varsUnm[names(varsUnm)==pairGroups[1]] + varsUnm[names(varsUnm)==pairGroups[2]])/2))
 
-  ratioVars <- vars[names(vars)==pairGroups[1]]/vars[names(vars)==pairGroups[2]]
+  #Return the ratio of the variances >= 1
+  ratioVars <- max(c(vars[names(vars)==pairGroups[1]]/vars[names(vars)==pairGroups[2]],
+                     vars[names(vars)==pairGroups[2]]/vars[names(vars)==pairGroups[1]]))
 
   return(list(stdzDiff = stdzDiff,
               ratioVars = ratioVars))
