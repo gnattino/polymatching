@@ -5,11 +5,12 @@ Version: 0.1.0
 Authors@R: c(
     person("Giovanni", "Nattino", email = "nattino.1@osu.edu", role = "cre"),
     person("Bo", "Lu", email = "lu.232@osu.edu", role = "aut"))
-Description: Includes function for conditionally optimal matching, a matching algorithm to 
+Description: Includes functions for conditionally optimal matching, a matching algorithm to 
     generate matched sample in designs with 3, 4, 5 and 6 groups. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
-Imports: optmatch, ggplot2, tidyr, gridExtra
+Imports: optmatch, ggplot2, tidyr, gridExtra, utils, stats
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
+RoxygenNote: 6.1.1

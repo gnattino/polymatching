@@ -35,11 +35,11 @@ balanceContVar <- function(data, varBalance, match_id, varGroup, pairGroups){
   #For difference in means, matched data
   dataMeans <- data[data[,varGroup] %in% pairGroups & !is.na(match_id), ]
   means <- tapply(dataMeans[,varBalance], INDEX = dataMeans[,varGroup], FUN = mean)
-  vars <- tapply(dataMeans[,varBalance], INDEX = dataMeans[,varGroup], FUN = var)
+  vars <- tapply(dataMeans[,varBalance], INDEX = dataMeans[,varGroup], FUN = stats::var)
 
   #For variances, unmatched data
   dataUnm <- data[data[,varGroup] %in% pairGroups, ]
-  varsUnm <- tapply(dataUnm[,varBalance], INDEX = dataUnm[,varGroup], FUN = var)
+  varsUnm <- tapply(dataUnm[,varBalance], INDEX = dataUnm[,varGroup], FUN = stats::var)
 
   stdzDiff <- (means[names(means)==pairGroups[1]] - means[names(means)==pairGroups[2]])/(
                 sqrt((varsUnm[names(varsUnm)==pairGroups[1]] + varsUnm[names(varsUnm)==pairGroups[2]])/2))

@@ -32,7 +32,7 @@
 #' Describe distance within matched sets.
 #'
 #' @examples
-#' plot(NA, NA)
+#' plot(1, 1)
 #'
 #' @export
 polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", iterate = T, niter_max = 50, verbose = T) {
@@ -70,7 +70,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   data$idUnits <- 1:nrow(data)
 
   if(distance == "mahalanobis") {
-    Sigma <- cov(as.matrix(data[,varsMatch]))
+    Sigma <- stats::cov(as.matrix(data[,varsMatch]))
   } else {
     Sigma <- NULL
   }

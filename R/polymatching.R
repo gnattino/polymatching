@@ -1,4 +1,4 @@
-#' Polymatching: generating matched samples in designs with 3, 4, 5 and 6 groups
+#' Polymatching: A Matching Algorithm for Multiple Treatment Groups
 #'
 #' Text to describe the package.
 #'

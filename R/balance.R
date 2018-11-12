@@ -16,7 +16,7 @@
 #' @details
 #'
 #' @examples
-#' plot(NA, NA)
+#' plot(1, 1)
 #'
 #' @export
 balance <- function(formulaBalance, match_id, data) {
@@ -38,7 +38,7 @@ balance <- function(formulaBalance, match_id, data) {
   varsBalance <- resultCheckData$varsMatch
 
 
-  pairGroups <- combn(names(table(data[,varGroup])), 2)
+  pairGroups <- utils::combn(names(table(data[,varGroup])), 2)
   pairsGroupsText <- apply(pairGroups, FUN = function(x) {paste(x, collapse = "-")},2)
 
   #Generate a dataset to store the results of the balance: each variable has measure of balance
@@ -131,7 +131,7 @@ balance <- function(formulaBalance, match_id, data) {
 #' @details
 #'
 #' @examples
-#' plot(NA, NA)
+#' plot(1, 1)
 #'
 #' @export
 plot.balanceCondOptMatch <- function(dataBalance) {
@@ -139,8 +139,8 @@ plot.balanceCondOptMatch <- function(dataBalance) {
   #Data for standardized difference
   keepVarsStdzDiff <- c("groups","variable","stdzDiffPre","stdzDiffPost")
   dataBalanceStdzDiff <- tidyr::gather(dataBalance[,keepVarsStdzDiff],
-                                       key = pre_post,
-                                       value = stdzDiff, - variable, - groups)
+                                       key = "pre_post",
+                                       value = "stdzDiff", - variable, - groups)
   dataBalanceStdzDiff$pre_post <- factor(dataBalanceStdzDiff$pre_post,
                                          levels = c("stdzDiffPost","stdzDiffPre"),
                                          labels = c("Post","Pre"))
@@ -150,13 +150,13 @@ plot.balanceCondOptMatch <- function(dataBalance) {
   #Data for ratio of variances
   keepVarsRatioVars <- c("groups","variable","ratioVarsPre","ratioVarsPost")
   dataBalanceRatioVars <- tidyr::gather(dataBalance[dataBalance$type == "continuous",keepVarsRatioVars],
-                                       key = pre_post,
-                                       value = ratioVars, - variable, - groups)
+                                       key = "pre_post",
+                                       value = "ratioVars", - variable, - groups)
   dataBalanceRatioVars$pre_post <- factor(dataBalanceRatioVars$pre_post,
                                          levels = c("ratioVarsPost","ratioVarsPre"),
                                          labels = c("Post","Pre"))
   dataBalanceRatioVars$variable <- factor(dataBalanceRatioVars$variable,
-                                          levels = unique(resultBalance$variable[dataBalance$type == "continuous"]))
+                                          levels = unique(dataBalance$variable[dataBalance$type == "continuous"]))
 
 
 

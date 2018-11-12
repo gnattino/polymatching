@@ -6,7 +6,7 @@ pairwiseDistance <- function(A, B, distance, Sigma) {
   }
 
   if(distance=="mahalanobis") {
-    output <- sqrt(mahalanobis(x = A, center = B, cov = Sigma))
+    output <- sqrt(stats::mahalanobis(x = A, center = B, cov = Sigma))
   }
 
   return(output)
@@ -17,7 +17,7 @@ computePairwiseDistances <- function(dataPolygon,  distance, Sigma) {
 
   dataPolygon <- as.matrix(dataPolygon)
 
-  pairGroups <- combn(1:nrow(dataPolygon), 2)
+  pairGroups <- utils::combn(1:nrow(dataPolygon), 2)
 
   sumPairwDist <- 0
 
@@ -85,7 +85,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     # - group 1
     longIndexGroup1 <- dataAll[!is.na(dataAll[,varIndexMatch1]), c(varGroup, varIndexMatch1)]
     longIndexGroup1$value <- row.names(longIndexGroup1)
-    wideIndexGroup1 <- reshape(longIndexGroup1,
+    wideIndexGroup1 <- stats::reshape(longIndexGroup1,
                                direction = "wide",
                                idvar = varIndexMatch1,
                                timevar = varGroup)
@@ -95,7 +95,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     # - group 2
     longIndexGroup2 <- dataAll[!is.na(dataAll[,varIndexMatch2]), c(varGroup, varIndexMatch2)]
     longIndexGroup2$value <- row.names(longIndexGroup2)
-    wideIndexGroup2 <- reshape(longIndexGroup2,
+    wideIndexGroup2 <- stats::reshape(longIndexGroup2,
                                direction = "wide",
                                idvar = varIndexMatch2,
                                timevar = varGroup)
@@ -134,7 +134,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     }
 
     #Sum the pairwise distances within matched sets
-    pairGroups <- combn(c(groups1, groups2), 2)
+    pairGroups <- utils::combn(c(groups1, groups2), 2)
     distances <- rep(0, nrow(indexDf))
 
     #For Mahalanobis distance, need the inverse of Sigma
@@ -184,8 +184,8 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                           levels = c(paste(groups1, collapse = ""),
                                      paste(groups2, collapse = "")))
   tabTemp <- table(data$groupNew[selectionToMatch])
-  data$groupNew <- relevel(data$groupNew,
-                           names(tabTemp)[which.max(tabTemp)])
+  data$groupNew <- stats::relevel(data$groupNew,
+                                  names(tabTemp)[which.max(tabTemp)])
 
   #Make treatment variable binary. Package optmatch deprecated factor type for treatment variables.
   data$groupNew <- (data$groupNew == (levels(data$groupNew)[2]))*1
