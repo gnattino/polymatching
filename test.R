@@ -113,16 +113,16 @@ result <- polymatch(formulaMatch = group ~ variable, data = dat,
 dat$match_id <- result$match_id
 
 
-#Plot distribution of matching variable
-library(ggplot2)
-ggplot(data = dat) + geom_density(aes(x=variable,
-                                      colour = group,
-                                      group = group))
-
-ggplot(data = dat[!is.na(dat$match_id),]) +
-  geom_density(aes(x=variable,
-                   colour = group,
-                   group = group))
+# #Plot distribution of matching variable
+# library(ggplot2)
+# ggplot(data = dat) + geom_density(aes(x=variable,
+#                                       colour = group,
+#                                       group = group))
+#
+# ggplot(data = dat[!is.na(dat$match_id),]) +
+#   geom_density(aes(x=variable,
+#                    colour = group,
+#                    group = group))
 
 resultBalance <- balance(group ~ variable + var1 + var2 + var3 + var4,
                         data = dat, match_id = result$match_id)
@@ -249,6 +249,18 @@ dat <- data.frame(group = c("A","A","B","B","B","C","C","C"),
 
 result <- polymatch(formulaMatch = group ~ variable, data = dat,
                     distance = "euclidean", start = "small.to.large",
+                    iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean", start = "A-B-C",
+                    iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean", start = "A-C-B",
+                    iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean", start = "B-C-A",
                     iterate = T, niter_max = 50, verbose = T)
 
 dat$match_id <- result$match_id
