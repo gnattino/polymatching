@@ -11,9 +11,8 @@
 #' @param data The \code{data.frame} object with the data. It must contain all the variables specified in \code{formulaBalance}.
 #'
 #' @return A \code{data.frame} containing the standardized differences and ratios of the variances (only for continuous
-#' variables) for each pair of treatment groups.
-#'
-#' @details
+#' variables) for each pair of treatment groups. A graphical representation of the results can be generated with
+#' \code{\link{plotBalance}}.
 #'
 #' @examples
 #' plot(1, 1)
@@ -128,19 +127,17 @@ balance <- function(formulaBalance, match_id, data) {
 #' If all the covariates are categorical or binary, only the plot with the standardized differences is generated.
 #' The function also returns a list with the \code{ggplot2} objects corresponding to the generated plot(s).
 #'
-#' @details
-#'
 #' @examples
 #' plot(1, 1)
 #'
 #' @export
-plot.balanceCondOptMatch <- function(dataBalance) {
+plotBalance <- function(dataBalance) {
 
   #Data for standardized difference
   keepVarsStdzDiff <- c("groups","variable","stdzDiffPre","stdzDiffPost")
   dataBalanceStdzDiff <- tidyr::gather(dataBalance[,keepVarsStdzDiff],
                                        key = "pre_post",
-                                       value = "stdzDiff", - variable, - groups)
+                                       value = "stdzDiff", - "variable", - "groups")
   dataBalanceStdzDiff$pre_post <- factor(dataBalanceStdzDiff$pre_post,
                                          levels = c("stdzDiffPost","stdzDiffPre"),
                                          labels = c("Post","Pre"))
@@ -151,7 +148,7 @@ plot.balanceCondOptMatch <- function(dataBalance) {
   keepVarsRatioVars <- c("groups","variable","ratioVarsPre","ratioVarsPost")
   dataBalanceRatioVars <- tidyr::gather(dataBalance[dataBalance$type == "continuous",keepVarsRatioVars],
                                        key = "pre_post",
-                                       value = "ratioVars", - variable, - groups)
+                                       value = "ratioVars", - "variable", - "groups")
   dataBalanceRatioVars$pre_post <- factor(dataBalanceRatioVars$pre_post,
                                          levels = c("ratioVarsPost","ratioVarsPre"),
                                          labels = c("Post","Pre"))
@@ -161,13 +158,13 @@ plot.balanceCondOptMatch <- function(dataBalance) {
 
 
   plotStdzDiff <- ggplot2::ggplot(data = dataBalanceStdzDiff) +
-    ggplot2::geom_boxplot(ggplot2::aes(x = pre_post,
-                                       y = stdzDiff,
-                                       colour= pre_post),
+    ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
+                                       y = "stdzDiff",
+                                       colour= "pre_post"),
                           outlier.shape = NA) +
-    ggplot2::geom_jitter(ggplot2::aes(x = pre_post,
-                                       y = stdzDiff,
-                                       colour= pre_post), size = 2) +
+    ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
+                                       y = "stdzDiff",
+                                       colour= "pre_post"), size = 2) +
     ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 1)  +
     ggplot2::coord_flip() +
     ggplot2::theme_bw() +
@@ -181,13 +178,13 @@ plot.balanceCondOptMatch <- function(dataBalance) {
   if(nrow(dataBalanceRatioVars)>0) {
 
     plotRatioVars <- ggplot2::ggplot(data = dataBalanceRatioVars) +
-      ggplot2::geom_boxplot(ggplot2::aes(x = pre_post,
-                                         y = ratioVars,
-                                         colour= pre_post),
+      ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
+                                         y = "ratioVars",
+                                         colour= "pre_post"),
                             outlier.shape = NA)  +
-      ggplot2::geom_jitter(ggplot2::aes(x = pre_post,
-                                        y = ratioVars,
-                                        colour= pre_post), size = 2) +
+      ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
+                                        y = "ratioVars",
+                                        colour= "pre_post"), size = 2) +
       ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 1)  +
       ggplot2::coord_flip() +
       ggplot2::theme_bw() +

@@ -1,6 +1,6 @@
 Package: polymatching
 Type: Package
-Title: Conditionally Optimal Matching for Designs with Multiple Group 
+Title: A Matching Algorithm for Designs with Multiple Groups 
 Version: 0.1.0
 Authors@R: c(
     person("Giovanni", "Nattino", email = "nattino.1@osu.edu", role = "cre"),

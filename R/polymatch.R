@@ -10,11 +10,11 @@
 #' @param start An object specifying the starting point of the iterative algorithm. Three types of inputs are accepted.
 #' First, \code{start="small.to.large"} (default) generates the first set of matched sets by matching groups
 #' from the smallest to the largest. Second, users can specify the order to be used to match groups for the starting sample.
-#' For example, if there are four groups with labels "a","b","c" and "d", \code{start="d-b-a-c"} generates the starting sample
-#' by matching groups "d" and "b", than units from "a" to the "d"-"b"pairs, then units from "c" to the "d"-"b"-"a" triplets.
+#' For example, if there are four groups with labels "A","B","C" and "D", \code{start="D-B-A-C"} generates the starting sample
+#' by matching groups "D" and "B", then units from "A" to the "D"-"B"pairs, then units from "C" to the "D"-"B"-"A" triplets.
 #' Third, users can provide a matched set as starting condition and the algorithm will explore possible reductions in the total
 #' distance. In this case, \code{start} must be a vector with length equal to the number of rows of \code{data} and
-#' matched subjects must be flagged with the same value.
+#' matched subjects must be flagged with the same value. See section 'Details' for further information.
 #' @param iterate Boolean specifying whether iterations should be done (\code{iterate=TRUE}, default) or not (\code{iterate=FALSE}).
 #' @param niter_max Maximum number of iterations. Default is 50.
 #' @param verbose Boolean: should text be printed in the console? Default is \code{TRUE}.
@@ -29,7 +29,31 @@
 #' @details The function implements the conditionally optimal matching algorithm, which iteratively uses
 #' two-group optimal matching to generate matched samples with small total distance. In the current implementation,
 #' it is possible to generate matched samples with only one subject per group.
-#' Describe distance within matched sets.
+#'
+#' The steps of the algorithm are described with the following example. Consider a 4-group design with
+#' groups labels "A", "B", "C" and "D". The algorithm requires a set of quadruplets as starting point. The argument \code{start} defines the approach to be used to
+#' generate such a starting point. \code{polymatch} generates the starting point by sequentially using optimal two-group matching.
+#' In the default setting (\code{start="small.to.large"}), the steps are: 1) optimally match the two smallest
+#' groups; 2) optimally match the third smallest group to the pairs generated in the first step; 3) optimally match the last group
+#' to the triplets generated in the second step. Notably, we can use the optimal two-group algorithm in steps 2) and 3) because they are
+#' two-dimensional problems: the elements of one group on one hand, fixed matched sets on the other hand. The order of the
+#' groups to be considered when generating the estarting point can be user-specified (e.g., \code{start="D-B-A-C"}).
+#' In alternative, the user can provide a matched set that will be used as starting point.
+#'
+#' Given the starting matched set, the algorithm iteratively explores possible reductions in the total distance (if \code{iterate="TRUE"}).
+#' The algorithm sequentially relaxes the connection to each group and rematches units for that group:
+#' i) rematch "B-C-D" triplets within the quadruplets to units in group "A";
+#' ii) rematch "A-C-D" triplets within the quadruplets to units in group "B";
+#' iii) rematch "A-B-D" triplets within the quadruplets to units in group "C";
+#' iv) rematch "A-B-C" triplets within the quadruplets to units in group "D".
+#' If none of the sets of quadruplets generated in i)-iv) has smaller total distance than the starting point, the algorihm stops.
+#' Otherwise, the set of quadruplets with smallest distance is seleceted and the process iterated, until no reduction in the total
+#' distance is found or the number of maximum iterations is reached (\code{niter_max=50} by default).
+#'
+#' The total distance is defined as the sum of all the within-matched-set distances. The within-matched-set distance is defined as the
+#' sum of the pairwise distances between pairs of units in the matched set. The type of distance is specified with the \code{distance}
+#' argument. The current implementation supports Euclidean (\code{distance="euclidean"}) and Mahalanobis (\code{distance="mahalanobis"})
+#' distances. In particular, for the Mahalanobis distance, the covariance matrix is defined only once on the full dataset.
 #'
 #' @examples
 #' plot(1, 1)
@@ -156,7 +180,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
   # Say some stuff
   if(verbose==T) {
-    cat("Total distance of starting matched sample: ", sprintf("%.10f",total_distance_start),"\n")
+    cat("Total distance of starting matched sample: ", sprintf("%.3f",total_distance_start),"\n")
     #cat("\n")
   }
 
@@ -210,7 +234,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
       # Say some stuff
       if(verbose==T) {
-        cat("Ended iteration ", niter, " - total distance:", sprintf("%.10f",best_total_distance),"\n")
+        cat("Ended iteration ", niter, " - total distance:", sprintf("%.3f",best_total_distance),"\n")
         #cat("\n")
       }
 

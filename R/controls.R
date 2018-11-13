@@ -1,5 +1,6 @@
 
-#Check that type of inputs is appropriate
+#' Check that type of inputs is appropriate
+#' @keywords internal
 checkInputs <- function(formulaMatch, data, distance, start, iterate, niter_max, verbose){
 
   if( ! "formula" %in% class(formulaMatch) ) {
@@ -12,7 +13,8 @@ checkInputs <- function(formulaMatch, data, distance, start, iterate, niter_max,
 
 }
 
-#Check coherence of inputs with data
+#' Check coherence of inputs with data
+#' @keywords internal
 checkData <- function(formulaMatch, data, start){
 
   varsFromFormula <- all.vars(formulaMatch)

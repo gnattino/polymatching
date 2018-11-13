@@ -1,4 +1,5 @@
-#Distance between two units
+#'Distance between two units
+#' @keywords internal
 pairwiseDistance <- function(A, B, distance, Sigma) {
 
   if(distance=="euclidean") {
@@ -12,7 +13,8 @@ pairwiseDistance <- function(A, B, distance, Sigma) {
   return(output)
 }
 
-#Given a set of units, compute all the pairwise distances.
+#'Given a set of units, compute all the pairwise distances.
+#' @keywords internal
 computePairwiseDistances <- function(dataPolygon,  distance, Sigma) {
 
   dataPolygon <- as.matrix(dataPolygon)
@@ -33,7 +35,8 @@ computePairwiseDistances <- function(dataPolygon,  distance, Sigma) {
   return(sumPairwDist)
 }
 
-#Compute total distance of a matched sample
+#' Compute total distance of a matched sample
+#' @keywords internal
 evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 
   withinMatchDistances <- by(data[,varsMatch],
@@ -53,15 +56,20 @@ evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 }
 
 
-#Function implementing conditional optimal matching.
-#Optimally matches two sets of IDs of matched units--'varIndexMatch1' and 'varIndexMatch2'--with respect
-#to matching variables 'varsMatch'.
+#' Function implementing conditional optimal matching.
+#'
+#' Optimally matches two sets of IDs of matched units--varIndexMatch1 and varIndexMatch2--with respect
+#' to matching variables varsMatch.
+#'
+#' @keywords internal
 condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
                             distance, Sigma) {
 
+
   #Local function for conditional matching:
   #----------------------------------------
+
   applyPersonalDistance <- function(index, data, z) {
 
     #browser()
@@ -164,15 +172,13 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     return(distances)
   }
 
-  #---------------------------------------------------------------------------------------------
-
+  ############################################################################################
 
   groups1 <- sort(unique(data[!is.na(data[,varIndexMatch1]), varGroup]))
   groups2 <- sort(unique(data[!is.na(data[,varIndexMatch2]), varGroup]))
 
   #In the selection, selecting groups1[1] and groups2[1] is arbitrary.
-  #However, the same choice made here must be reported also into the function
-  #'applyPersonalDistance'
+  #However, the same choice made here must be reported also into the function applyPersonalDistance
   selectionToMatch <- ( (data[,varGroup] %in% groups1[1] & !is.na(data[,varIndexMatch1])) |
                           (data[,varGroup] %in% groups2[1] & !is.na(data[,varIndexMatch2])) )
 

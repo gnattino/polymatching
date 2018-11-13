@@ -1,4 +1,5 @@
-#Check type of variable
+#' Check type of variable
+#' @keywords internal
 typeVariable <- function(variable) {
 
   if(class(variable) %in% c("numeric","integer")) {
@@ -29,7 +30,8 @@ typeVariable <- function(variable) {
   return(type)
 }
 
-#Balance indicators for continuous variables
+#' Balance indicators for continuous variables
+#' @keywords internal
 balanceContVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
   #For difference in means, matched data
@@ -53,7 +55,8 @@ balanceContVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
 }
 
-#Balance indicators for binary variables
+#' Balance indicators for binary variables
+#' @keywords internal
 balanceBinVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
   #The "1" in the binary variables is considered the second level
@@ -75,7 +78,8 @@ balanceBinVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
 }
 
-#Balance indicators for categorical variables (more than 2 levels)
+#' Balance indicators for categorical variables (more than 2 levels)
+#' @keywords internal
 balanceCatVar <- function(data, varBalance, match_id, varGroup, pairGroups){
 
   #For difference in means, matched data

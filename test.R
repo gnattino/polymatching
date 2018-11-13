@@ -1,8 +1,4 @@
-source("R/polymatch.R")
-source("R/controls.R")
-source("R/matching_functions.R")
-source("R/balance.R")
-source("R/balance_functions.R")
+library(polymatching)
 
 ##########################################
 # Function to generate data to polymatch #
@@ -131,7 +127,7 @@ ggplot(data = dat[!is.na(dat$match_id),]) +
 resultBalance <- balance(group ~ variable + var1 + var2 + var3 + var4,
                         data = dat, match_id = result$match_id)
 resultBalance
-resultPlot <- plot.balanceCondOptMatch(resultBalance)
+resultPlot <- plotBalance(resultBalance)
 
 
 #Check balance (2) - several matching variables
@@ -150,7 +146,7 @@ result <- polymatch(formulaMatch = group ~ var1+var2+var3, data = dat,
 resultBalance <- balance(group ~  var1 + var2 + var3,
                          data = dat, match_id = result$match_id)
 resultBalance
-resultPlot <- plot.balanceCondOptMatch(resultBalance)
+resultPlot <- plotBalance(resultBalance)
 
 #Check balance (3) - our matched dataset
 #-----------------------------------------------
@@ -187,7 +183,7 @@ resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
                          data = dat, match_id = dat$indexMatch)
 resultBalance
 
-resultPlot <- plot.balanceCondOptMatch(resultBalance)
+resultPlot <- plotBalance(resultBalance)
 pdf("C:/Users/natt03/Desktop/triplet matching/analysis/balancePlot.pdf", height = 15, width = 6)
 print(resultPlot[[1]])
 dev.off()
@@ -200,8 +196,8 @@ resultBalance1 <- balance(HOSP_TRAUMA ~ AGE + iss +
 resultBalance2 <- balance(HOSP_TRAUMA ~ nchs_1 + nchs_2 + nchs_3 + nchs_4 + nchs_5 + nchs_6 +
                             chronic + multiple_injury + FEMALE,
                          data = dat, match_id = dat$indexMatch)
-resultPlot1 <- plot.balanceCondOptMatch(resultBalance1)
-resultPlot2 <- plot.balanceCondOptMatch(resultBalance2)
+resultPlot1 <- plotBalance(resultBalance1)
+resultPlot2 <- plotBalance(resultBalance2)
 
 library(gridExtra)
 library(ggplot2)
