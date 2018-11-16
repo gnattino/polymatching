@@ -199,9 +199,12 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #Global variables to be used in the function 'applyPersonalDistance'
   dataAll <-  data
 
+  #browser()
   resultDistance <- optmatch::match_on(applyPersonalDistance,
                              z = data$groupNew[selectionToMatch],
                              data = data[selectionToMatch,])
+  #optmatch::caliper(resultDistance, width = 0.649, values = TRUE)
+  #The possible caliper is a direct truncation of all the distances within that value
 
   resultMatch <- optmatch::pairmatch(resultDistance,
                            controls = 1,
