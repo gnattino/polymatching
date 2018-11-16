@@ -38,6 +38,36 @@ generateData <- function(nVect, par = NULL) {
 #########
 
 
+#Check starting points
+#---------------------
+set.seed(123456)
+dat <- generateData(c(80,50,90,75,200,100))
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "small.to.large",
+                    iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "5-6-3-4-1-2",
+                    iterate = T, niter_max = 50, verbose = T)
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4-5-6",
+                    iterate = T, niter_max = 50, verbose = T)
+
+dat$match_id <- NA
+for(group in unique(dat$group)) {
+  dat$match_id[dat$group %in% group][sample(sum(dat$group %in% group),50)] <- 1:50
+}
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = dat$match_id,
+                    iterate = T, niter_max = 50, verbose = T)
+
 #Check iterations
 #----------------
 set.seed(123456)
@@ -173,7 +203,7 @@ dat$chronic <- factor(dat$chronic)
 dat$multiple_injury <- factor(dat$multiple_injury)
 dat$FEMALE <- factor(dat$FEMALE)
 
-#E.g. 1 - very long plot
+#E.g. 1 - plot on two columns
 resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
                            income_1 + income_2 + income_3 + income_4 +
                            pay1_1 + pay1_2 + pay1_3 + pay1_4 + pay1_5 + pay1_6 +
@@ -184,9 +214,9 @@ resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
 resultBalance
 
 resultPlot <- plotBalance(resultBalance)
-pdf("C:/Users/natt03/Desktop/triplet matching/analysis/balancePlot.pdf", height = 15, width = 6)
-print(resultPlot[[1]])
-dev.off()
+# pdf("C:/Users/natt03/Desktop/triplet matching/analysis/balancePlot.pdf", height = 15, width = 6)
+# print(resultPlot[[1]])
+# dev.off()
 
 #E.g. 2 - split balance in two
 resultBalance1 <- balance(HOSP_TRAUMA ~ AGE + iss +
@@ -202,6 +232,17 @@ resultPlot2 <- plotBalance(resultBalance2)
 library(gridExtra)
 library(ggplot2)
 grid.arrange(resultPlot1[[1]] + labs(title=""),resultPlot2[[1]] + labs(title=""), ncol = 2)
+
+#E.g. 3 - plot with ratio variances
+resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
+                           income_1 + income_2 + income_3 + income_4 +
+                           pay1_1 + pay1_2 + pay1_3 + pay1_4 + pay1_5 + pay1_6 +
+                           nchs_1 + nchs_2 + nchs_3 + nchs_4 + nchs_5 + nchs_6 +
+                           chronic + multiple_injury +
+                           FEMALE,
+                         data = dat, match_id = dat$indexMatch)
+resultPlot <- plotBalance(resultBalance, ratioVariances = TRUE)
+
 
 #Example with some numerical weird issues
 #----------------------------------------
