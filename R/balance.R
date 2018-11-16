@@ -121,17 +121,22 @@ balance <- function(formulaBalance, match_id, data) {
 #' The function generates a plot summarizing the balance of the covariates.
 #'
 #' @param dataBalance the output of \code{\link{balance}}.
+#' @param ratioVariances Boolean. If \code{TRUE}, the generated plot contains two panels:
+#' one for the standardized differences and one for the ratios of the variances. If \code{FALSE}
+#' (the default), only the standardized differences are represented.
 #'
-#' @return If at least one of the covariates is continuous, the function generates a plot with two panels: one for the
+#' @return If at least one of the covariates is continuous and \code{ratioVariances=TRUE},
+#' the function generates a plot with two panels: one for the
 #' standardized differences and one for the ratio of the variances (only for the continous variables).
-#' If all the covariates are categorical or binary, only the plot with the standardized differences is generated.
+#' If either all the covariates are categorical/binary or \code{ratioVariances=FALSE} (or both),
+#' only the plot with the standardized differences is generated.
 #' The function also returns a list with the \code{ggplot2} objects corresponding to the generated plot(s).
 #'
 #' @examples
 #' plot(1, 1)
 #'
 #' @export
-plotBalance <- function(dataBalance) {
+plotBalance <- function(dataBalance, ratioVariances = FALSE) {
 
   #Data for standardized difference
   keepVarsStdzDiff <- c("groups","variable","stdzDiffPre","stdzDiffPost")
@@ -145,17 +150,43 @@ plotBalance <- function(dataBalance) {
                                          levels = unique(dataBalance$variable))
 
   #Data for ratio of variances
-  keepVarsRatioVars <- c("groups","variable","ratioVarsPre","ratioVarsPost")
-  dataBalanceRatioVars <- tidyr::gather(dataBalance[dataBalance$type == "continuous",keepVarsRatioVars],
-                                       key = "pre_post",
-                                       value = "ratioVars", - "variable", - "groups")
-  dataBalanceRatioVars$pre_post <- factor(dataBalanceRatioVars$pre_post,
-                                         levels = c("ratioVarsPost","ratioVarsPre"),
-                                         labels = c("Post","Pre"))
-  dataBalanceRatioVars$variable <- factor(dataBalanceRatioVars$variable,
-                                          levels = unique(dataBalance$variable[dataBalance$type == "continuous"]))
+  if(ratioVariances == T) {
+
+    keepVarsRatioVars <- c("groups","variable","ratioVarsPre","ratioVarsPost")
+    dataBalanceRatioVars <- tidyr::gather(dataBalance[dataBalance$type == "continuous",keepVarsRatioVars],
+                                         key = "pre_post",
+                                         value = "ratioVars", - "variable", - "groups")
+    dataBalanceRatioVars$pre_post <- factor(dataBalanceRatioVars$pre_post,
+                                           levels = c("ratioVarsPost","ratioVarsPre"),
+                                           labels = c("Post","Pre"))
+    dataBalanceRatioVars$variable <- factor(dataBalanceRatioVars$variable,
+                                            levels = unique(dataBalance$variable[dataBalance$type == "continuous"]))
+  } else {
+    #Empty data frame with 0 variables if ratioVariances = F
+    dataBalanceRatioVars <- data.frame(var=numeric(0))
+  }
 
 
+  #How many columns? If also the ratio of the variances: 1 column
+  if(nrow(dataBalanceRatioVars)>0) {
+
+    numberColumnsStdzDiff <- 1
+
+
+    } else {
+
+      #If only standardized differnces: 1 column if not many variables.
+      if(length(unique(dataBalanceStdzDiff$variable))<=9) {
+
+        numberColumnsStdzDiff <- 1
+
+      } else {
+        #If only standardized differnces but many variables: 2 columns.
+        numberColumnsStdzDiff <-   2
+
+      }
+
+  }
 
   plotStdzDiff <- ggplot2::ggplot(data = dataBalanceStdzDiff) +
     ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
@@ -165,7 +196,7 @@ plotBalance <- function(dataBalance) {
     ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
                                        y = "stdzDiff",
                                        colour= "pre_post"), size = 2) +
-    ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 1)  +
+    ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = numberColumnsStdzDiff)  +
     ggplot2::coord_flip() +
     ggplot2::theme_bw() +
     ggplot2::theme(axis.title.y = ggplot2::element_blank()) +
@@ -206,7 +237,7 @@ plotBalance <- function(dataBalance) {
 
   } else {
 
-    plotStdzDiff
+    print(plotStdzDiff)
 
   }
 
