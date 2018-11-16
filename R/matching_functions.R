@@ -64,15 +64,14 @@ evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 #' @keywords internal
 condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
-                            distance, Sigma) {
+                            distance, Sigma,
+                            varsExactMatch) {
 
 
   #Local function for conditional matching:
   #----------------------------------------
 
   applyPersonalDistance <- function(index, data, z) {
-
-    #browser()
 
     indexDf <- as.data.frame(index, stringsAsFactors = F)
     groupTreated <- unique(data[z,varGroup])
@@ -199,10 +198,26 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #Global variables to be used in the function 'applyPersonalDistance'
   dataAll <-  data
 
-  #browser()
-  resultDistance <- optmatch::match_on(applyPersonalDistance,
-                             z = data$groupNew[selectionToMatch],
-                             data = data[selectionToMatch,])
+  #If there are some variables to match exactly on, do that:
+  if(!is.null(varsExactMatch)) {
+
+    formulaExactMatch <- as.formula(paste0("groupNew ~ ",paste(varsExactMatch, collapse = "+")))
+
+    resultExactMatch <- optmatch::exactMatch(formulaExactMatch, data = data[selectionToMatch,])
+
+    resultDistance <- optmatch::match_on(applyPersonalDistance,
+                                         z = data$groupNew[selectionToMatch],
+                                         data = data[selectionToMatch,],
+                                         within = resultExactMatch)
+
+    } else {
+      #Otherwise, matching without exact matching constraints:
+      resultDistance <- optmatch::match_on(applyPersonalDistance,
+                                           z = data$groupNew[selectionToMatch],
+                                           data = data[selectionToMatch,])
+
+  }
+
   #optmatch::caliper(resultDistance, width = 0.649, values = TRUE)
   #The possible caliper is a direct truncation of all the distances within that value
 

@@ -4,9 +4,6 @@
 #'
 #' @param formulaMatch Formula with form \code{group ~ x_1 + ... + x_p}, where \code{group} is the name of the variable
 #' identifying the treatment groups/exposures and \code{x_1},...,\code{x_p} are the matching variables.
-#' @param data The \code{data.frame} object with the data. It must contain all the variables specified in \code{formulaMatch}.
-#' @param distance String specifying whether the distance between pairs of observations should be computed with the
-#' Euclidean (\code{"euclidean"}, default) or Mahalanobis (\code{"mahalanobis"}) distance. See section 'Details' for further information.
 #' @param start An object specifying the starting point of the iterative algorithm. Three types of inputs are accepted.
 #' First, \code{start="small.to.large"} (default) generates the first set of matched sets by matching groups
 #' from the smallest to the largest. Second, users can specify the order to be used to match groups for the starting sample.
@@ -15,6 +12,12 @@
 #' Third, users can provide a matched set as starting condition and the algorithm will explore possible reductions in the total
 #' distance. In this case, \code{start} must be a vector with length equal to the number of rows of \code{data} and
 #' matched subjects must be flagged with the same value. See section 'Details' for further information.
+#' @param data The \code{data.frame} object with the data. It must contain all the variables specified in \code{formulaMatch}.
+#' @param distance String specifying whether the distance between pairs of observations should be computed with the
+#' Euclidean (\code{"euclidean"}, default) or Mahalanobis (\code{"mahalanobis"}) distance. See section 'Details' for further information.
+#' @param exactMatch Formula with form \code{~ z_1 + ... + z_k}, where \code{z_1},...,\code{z_k} must
+#' be factor variables. Subjects are exactly matched on \code{z_1},...,\code{z_k}, i.e., matched
+#' within levels of these variables.
 #' @param iterate Boolean specifying whether iterations should be done (\code{iterate=TRUE}, default) or not (\code{iterate=FALSE}).
 #' @param niter_max Maximum number of iterations. Default is 50.
 #' @param verbose Boolean: should text be printed in the console? Default is \code{TRUE}.
@@ -59,7 +62,7 @@
 #' plot(1, 1)
 #'
 #' @export
-polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", iterate = T, niter_max = 50, verbose = T) {
+polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, iterate = T, niter_max = 50, verbose = T) {
 
   #Debug/devel:
   #------------
@@ -72,17 +75,19 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   # niter_max = 50
   # verbose = T
 
+  #browser()
   #Check types of inputs
-  checkInputs(formulaMatch, data, distance, start, iterate, niter_max, verbose)
+  checkInputs(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose)
 
   #Check coherence of data
-  resultCheckData <- checkData(formulaMatch, data, start)
+  resultCheckData <- checkData(formulaMatch, start, data, exactMatch)
   varGroup <- resultCheckData$varGroup
   varsMatch <- resultCheckData$varsMatch
   vectorSchemeStart <- resultCheckData$vectorSchemeStart
+  varsExactMatch <- resultCheckData$varsExactMatch
 
   #Select variables of interest
-  data <- data[,c(varGroup,varsMatch)]
+  data <- data[,c(varGroup,varsMatch,varsExactMatch)]
 
   #Make grouping variable as character
   data[,varGroup] <- as.character(data[,varGroup])
@@ -158,7 +163,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                     varsMatch = varsMatch,
                                     varGroup = varGroup,
                                     distance = distance,
-                                    Sigma = Sigma)
+                                    Sigma = Sigma,
+                                    varsExactMatch = varsExactMatch)
 
       #Erase ids of previous matching step
       dataStep$indexMatch1 <- dataStep$indexMatch2 <- NULL
@@ -217,7 +223,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                       varsMatch = varsMatch,
                                       varGroup = varGroup,
                                       distance = distance,
-                                      Sigma = Sigma)
+                                      Sigma = Sigma,
+                                      varsExactMatch = varsExactMatch)
 
         if(resultIter$total_distance < best_total_distance) {
 

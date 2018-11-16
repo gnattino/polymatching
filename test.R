@@ -123,6 +123,23 @@ dat[dat$match_idE %in% 1,]
 dat[dat$match_idM %in% 1,]
 
 
+#Exact match
+#-----------------------------------------------
+set.seed(123456)
+dat <- generateData(c(100,200,300,400),
+                    par = list(means = c(0,0,0,.5),
+                               sds = c(1,1,3,1)))
+dat$var1 <- factor(apply(rmultinom(nrow(dat), size = 1 , prob = c(1/10,2/10,3/10,4/10)), FUN = function(x){which(x==1)},2))
+dat$var2 <- factor(rbinom(nrow(dat), size = 1 , prob = c(1/10,9/10)), levels = c(0,1), labels = c("A","B"))
+
+#Match (only on one variable)
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4",
+                    exactMatch = ~var1+var2,
+                    iterate = T, niter_max = 50, verbose = T)
+
+
 #Check balance (1) - different type of variables
 #-----------------------------------------------
 set.seed(123456)

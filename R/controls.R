@@ -1,10 +1,14 @@
 
 #' Check that type of inputs is appropriate
 #' @keywords internal
-checkInputs <- function(formulaMatch, data, distance, start, iterate, niter_max, verbose){
+checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose){
 
   if( ! "formula" %in% class(formulaMatch) ) {
     stop("'formulaMatch' must be of class 'formula'")
+  }
+
+  if( ! "formula" %in% class(exactMatch) ) {
+    stop("'exactMatch' must be of class 'formula'")
   }
 
   if( length(start)>1 & length(start)<nrow(data)) {
@@ -15,7 +19,7 @@ checkInputs <- function(formulaMatch, data, distance, start, iterate, niter_max,
 
 #' Check coherence of inputs with data
 #' @keywords internal
-checkData <- function(formulaMatch, data, start){
+checkData <- function(formulaMatch, start, data, exactMatch){
 
   varsFromFormula <- all.vars(formulaMatch)
   varGroup <- varsFromFormula[1]
@@ -76,7 +80,20 @@ checkData <- function(formulaMatch, data, start){
 
   }
 
+  if(!is.null(exactMatch)) {
+
+    varsExactMatch <- all.vars(exactMatch)
+
+    if( ! all(varsExactMatch %in% names(data)) ) {
+      stop("The dataset provided must contain all the variables in 'exactMatch'")
+    }
+
+  } else {
+    varsExactMatch <- NULL
+  }
+
   return(list(varGroup = varGroup,
               varsMatch = varsMatch,
-              vectorSchemeStart = vectorSchemeStart))
+              vectorSchemeStart = vectorSchemeStart,
+              varsExactMatch = varsExactMatch))
 }
