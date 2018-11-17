@@ -257,7 +257,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
   if(verbose == T) {
     cat("End \n")
-    cat("Number of iterations: ", niter, ", total distance:", sprintf("%.3f",best_total_distance),"\n" )
+    cat(paste0("Number of iterations: ", niter,", total distance:", sprintf("%.3f",best_total_distance),"\n"))
+    cat("Number of matched sets: ", length(unique(best_match_id[!is.na(best_match_id)])),"\n")
   }
 
   if(iterate == T & niter>=niter_max) {

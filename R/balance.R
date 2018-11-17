@@ -27,12 +27,12 @@ balance <- function(formulaBalance, match_id, data) {
   # match_id = result$match_id
 
   #Check types of inputs (same function used for polymatch - amend with useless arguments)
-  checkInputs(formulaMatch = formulaBalance, data = data, start = match_id,
-              distance = "euclidean", iterate = T, niter_max = 50, verbose = T)
+  checkInputs(formulaMatch = formulaBalance, start = match_id, data = data,
+              distance = "euclidean", exactMatch = NULL, iterate = T, niter_max = 50, verbose = T)
 
   #Check coherence of data (as above)
-  resultCheckData <- checkData(formulaMatch = formulaBalance, data = data,
-                               start = match_id)
+  resultCheckData <- checkData(formulaMatch = formulaBalance, start = match_id,
+                               data = data, exactMatch = NULL)
   varGroup <- resultCheckData$varGroup
   varsBalance <- resultCheckData$varsMatch
 

@@ -123,8 +123,8 @@ dat[dat$match_idE %in% 1,]
 dat[dat$match_idM %in% 1,]
 
 
-#Exact match
-#-----------------------------------------------
+#Exact match (1) - everything goes fine
+#----------------------------------------
 set.seed(123456)
 dat <- generateData(c(100,200,300,400),
                     par = list(means = c(0,0,0,.5),
@@ -132,12 +132,111 @@ dat <- generateData(c(100,200,300,400),
 dat$var1 <- factor(apply(rmultinom(nrow(dat), size = 1 , prob = c(1/10,2/10,3/10,4/10)), FUN = function(x){which(x==1)},2))
 dat$var2 <- factor(rbinom(nrow(dat), size = 1 , prob = c(1/10,9/10)), levels = c(0,1), labels = c("A","B"))
 
-#Match (only on one variable)
+#I have one exact match for each of the subjects in the smallest group
+table(dat$group,dat$var1, dat$var2, dnn = c("group", "var1","var2"))
+
+#Match on one variable and exact match on other 2
 result <- polymatch(formulaMatch = group ~ variable, data = dat,
                     distance = "euclidean",
                     start = "1-2-3-4",
                     exactMatch = ~var1+var2,
                     iterate = T, niter_max = 50, verbose = T)
+
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+
+
+#Match only on one variable, exact match only on one variable
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4",
+                    exactMatch = ~var1,
+                    iterate = T, niter_max = 50, verbose = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+
+#Match only on one variable, no exact match
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4",
+                    iterate = T, niter_max = 50, verbose = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+#As expected, total distance is way smaller
+
+
+#Bad choice of order
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "4-3-2-1",
+                    exactMatch = ~var1+var2,
+                    iterate = T, niter_max = 50, verbose = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+#As expected, total distance is way smaller
+
+#Exact match (2) - Exact match does not exists
+#----------------------------------------
+set.seed(123456)
+dat <- generateData(c(100,100,100,100),
+                    par = list(means = c(0,0,0,.5),
+                               sds = c(1,1,3,1)))
+dat$var1 <- factor(apply(rmultinom(nrow(dat), size = 1 , prob = c(1/10,2/10,3/10,4/10)), FUN = function(x){which(x==1)},2))
+dat$var2 <- factor(rbinom(nrow(dat), size = 1 , prob = c(1/10,9/10)), levels = c(0,1), labels = c("A","B"))
+
+#Now I dow't have one exact match for each of the subjects in the smallest group
+table(dat$group,dat$var1, dat$var2, dnn = c("group", "var1","var2"))
+#subjects that can be matched exactly are the minimum by column:
+4+6+9+16+2+5+12+18
+
+#If matching exactly only on var1:
+table(dat$group,dat$var1, dnn = c("group", "var1"))
+7+18+26+36
+
+
+#If exact match does not exists, not all of the subjects are matched
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4",
+                    exactMatch = ~var1+var2,
+                    iterate = T, niter_max = 50, verbose = T)
+max(result$match_id, na.rm = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+
+#Changing the order does not change the number of matched sets
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "4-3-2-1",
+                    exactMatch = ~var1+var2,
+                    iterate = T, niter_max = 50, verbose = T)
+max(result$match_id, na.rm = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
+
+#If exact match does not exists, not all of the subjects are matched
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    distance = "euclidean",
+                    start = "1-2-3-4",
+                    exactMatch = ~var1,
+                    iterate = T, niter_max = 50, verbose = T)
+max(result$match_id, na.rm = T)
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
 
 
 #Check balance (1) - different type of variables
@@ -194,6 +293,7 @@ resultBalance <- balance(group ~  var1 + var2 + var3,
                          data = dat, match_id = result$match_id)
 resultBalance
 resultPlot <- plotBalance(resultBalance)
+resultPlot <- plotBalance(resultBalance,ratioVariances = T)
 
 #Check balance (3) - our matched dataset
 #-----------------------------------------------

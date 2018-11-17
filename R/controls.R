@@ -7,8 +7,10 @@ checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate
     stop("'formulaMatch' must be of class 'formula'")
   }
 
-  if( ! "formula" %in% class(exactMatch) ) {
-    stop("'exactMatch' must be of class 'formula'")
+  if( !is.null(exactMatch)) {
+    if( ! "formula" %in% class(exactMatch) ) {
+      stop("'exactMatch' must be of class 'formula'")
+    }
   }
 
   if( length(start)>1 & length(start)<nrow(data)) {
@@ -74,7 +76,7 @@ checkData <- function(formulaMatch, start, data, exactMatch){
     #Check that all the subjects in the smallest group(s) are matched
     smallestGroups <- names(tabGroup)[tabGroup==min(tabGroup)]
     if( sum(is.na(start[data[,varGroup] %in% smallestGroups]))>0) {
-      stop("All of the subjects in the smallest group(s) must be matched in the starting point provided in 'start'")
+      warning("In the matched sample provided, some units of the smallest group(s) are NOT matched")
     }
 
 

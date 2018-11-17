@@ -73,19 +73,23 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   applyPersonalDistance <- function(index, data, z) {
 
-    indexDf <- as.data.frame(index, stringsAsFactors = F)
-    groupTreated <- unique(data[z,varGroup])
-    groupControls <- unique(data[!z,varGroup])
-    names(indexDf) <- paste("group",c(groupTreated,groupControls), sep ="")
-
     #I can't pass additional arguments to the function 'applyPersonalDistance' through 'match_on',
     # 'match_on' passes ... to internal functions. To access to other objects, I need to take them
     # directly from the parent envirormnet, which is the environment where the function 'applyPersonalDistance' lives.
     #Grab objects from "outside the function":
-    envDataAll <- environment(applyPersonalDistance)
-    dataAll <- get("dataAll",envir = envDataAll)
-    Sigma <- get("Sigma",envir = envDataAll)
-    distance <- get("distance",envir = envDataAll)
+    envExternalFun <- environment(applyPersonalDistance)
+    dataAll <- get("dataAll",envir = envExternalFun)
+    Sigma <- get("Sigma",envir = envExternalFun)
+    distance <- get("distance",envir = envExternalFun)
+    varGroup <- get("varGroup",envir = envExternalFun)
+    varIndexMatch1 <- get("varIndexMatch1",envir = envExternalFun)
+    varIndexMatch2 <- get("varIndexMatch2",envir = envExternalFun)
+
+    #Generate indexDf is a matrix with all the treated-control pairs as rows.
+    indexDf <- as.data.frame(index, stringsAsFactors = F)
+    groupTreated <- unique(data[z,varGroup])
+    groupControls <- unique(data[!z,varGroup])
+    names(indexDf) <- paste("group",c(groupTreated,groupControls), sep ="")
 
     #Wide format for:
 
@@ -218,6 +222,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   }
 
+  #We can also think of adding the caliper.
   #optmatch::caliper(resultDistance, width = 0.649, values = TRUE)
   #The possible caliper is a direct truncation of all the distances within that value
 
