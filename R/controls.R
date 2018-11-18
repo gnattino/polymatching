@@ -22,6 +22,7 @@ checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate
 #' Check coherence of inputs with data
 #' @keywords internal
 checkData <- function(formulaMatch, start, data, exactMatch){
+  #browser()
 
   varsFromFormula <- all.vars(formulaMatch)
   varGroup <- varsFromFormula[1]
@@ -86,9 +87,25 @@ checkData <- function(formulaMatch, start, data, exactMatch){
 
     varsExactMatch <- all.vars(exactMatch)
 
+    #Check: all the variables are in the dataset
     if( ! all(varsExactMatch %in% names(data)) ) {
       stop("The dataset provided must contain all the variables in 'exactMatch'")
     }
+
+    #Check: if there is an initial dataset, it must be exactly matched on the variables.
+    if(length(start) > 1) {
+
+      for(varExactMatchTemp in varsExactMatch) {
+
+        if(!all(rowSums(table(start,data[,varExactMatchTemp])==length(tabGroup))==1)) {
+          stop(paste0("The matched sample provided is not exactly matched on '",varExactMatchTemp,"'"))
+        }
+
+      }
+
+    }
+
+
 
   } else {
     varsExactMatch <- NULL
