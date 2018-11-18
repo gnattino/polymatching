@@ -20,6 +20,7 @@
 #' @export
 balance <- function(formulaBalance, match_id, data) {
 
+  #browser()
   #Debug/devel:
   #------------
   # formulaBalance <- (group~variable+var1)

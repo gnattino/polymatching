@@ -85,15 +85,15 @@ balanceCatVar <- function(data, varBalance, match_id, varGroup, pairGroups){
   #For difference in means, matched data
   dataMeans <- data[data[,varGroup] %in% pairGroups & !is.na(match_id), ]
 
-  p1 <- prop.table(table(dataMeans$var1[dataMeans$group %in% pairGroups[1]]))
-  p2 <- prop.table(table(dataMeans$var1[dataMeans$group %in% pairGroups[2]]))
+  p1 <- prop.table(table(dataMeans[dataMeans$group %in% pairGroups[1],varBalance]))
+  p2 <- prop.table(table(dataMeans[dataMeans$group %in% pairGroups[2],varBalance]))
 
   p1 <- p1[1:(length(p1)-1)]
   p2 <- p2[1:(length(p2)-1)]
 
   #For variances, unmatched data
-  p1unm <- prop.table(table(dataMeans$var1[dataMeans$group %in% pairGroups[1]]))
-  p2unm <- prop.table(table(dataMeans$var1[dataMeans$group %in% pairGroups[2]]))
+  p1unm <- prop.table(table(dataMeans[dataMeans$group %in% pairGroups[1],varBalance]))
+  p2unm <- prop.table(table(dataMeans[dataMeans$group %in% pairGroups[2],varBalance]))
 
   p1unm <- p1unm[1:(length(p1unm)-1)]
   p2unm <- p2unm[1:(length(p2unm)-1)]
