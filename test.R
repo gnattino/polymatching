@@ -238,6 +238,44 @@ resultBalance <- balance(group ~ variable + var1 + var2,
 resultBalance
 resultPlot <- plotBalance(resultBalance)
 
+#Exact match (3) - Starting matched sets is/isn't exactly matched
+#-----------------------------------------------------------------
+set.seed(123456)
+dat <- generateData(c(100,100,100,100),
+                    par = list(means = c(0,0,0,.5),
+                               sds = c(1,1,3,1)))
+dat$var1 <- factor(apply(rmultinom(nrow(dat), size = 1 , prob = c(1/10,2/10,3/10,4/10)), FUN = function(x){which(x==1)},2))
+dat$var2 <- factor(rbinom(nrow(dat), size = 1 , prob = c(1/10,9/10)), levels = c(0,1), labels = c("A","B"))
+
+#Initial matched set is not exactly matched
+dat$match_id <- NA
+for(group in unique(dat$group)) {
+  dat$match_id[dat$group %in% group][sample(sum(dat$group %in% group),100)] <- 1:100
+}
+
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    start = dat$match_id,
+                    exactMatch = ~var1+var2)
+
+#generate an initial matched set exactly matched and use it as starting point
+result <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    start = "1-2-3-4",
+                    exactMatch = ~var1+var2, iterate = F)
+
+result2 <- polymatch(formulaMatch = group ~ variable, data = dat,
+                    start = result$match_id,
+                    exactMatch = ~var1+var2, iterate = T)
+
+table(dat$group,dat$var1, dat$var2, dnn = c("group", "var1","var2"))
+
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result$match_id)
+resultPlot <- plotBalance(resultBalance)
+
+resultBalance <- balance(group ~ variable + var1 + var2,
+                         data = dat, match_id = result2$match_id)
+resultBalance
+resultPlot <- plotBalance(resultBalance)
 
 #Check balance (1) - different type of variables
 #-----------------------------------------------
@@ -426,4 +464,95 @@ dat$match_id <- result$match_id
 #Optimal solution identified (5-8-8 and 10-11-13)
 dat
 
+########################
+# For examples in help #
+########################
+
+#Generate a datasets with group indicator and four variables:
+# - var1, continuous, sampled from normal distributions;
+# - var2, continuous, sampled from beta distributions;
+# - var3, categorical with 4 levels;
+# - var4, binary.
+set.seed(12345)
+dat <- data.frame(group= c(rep("A",100),rep("B",500),rep("C",500)),
+                  var1=c(rnorm(100,mean=0,sd=1),
+                        rnorm(500,mean=1,sd=2),
+                        rnorm(500,mean=-1,sd=2)),
+                  var2=c(rbeta(100,shape1=1,shape2=1),
+                         rbeta(500,shape1=2,shape2=1),
+                         rbeta(500,shape1=1,shape2=2)),
+                  var3=factor(c(rbinom(100,size=3,prob=.4),
+                              rbinom(500,size=3,prob=.5),
+                              rbinom(500,size=3,prob=.3))),
+                  var4=factor(c(rbinom(100,size=1,prob=.5),
+                              rbinom(500,size=1,prob=.3),
+                              rbinom(500,size=1,prob=.7))))
+
+
+#Match on the propensity score
+#-----------------------------
+
+#Fit propensity score model
+library(nnet)
+psModel <- multinom(group ~ var1 + var2 + var3 + var4,
+                    family=binomial(link=logit), data=dat)
+#Generate estimated probabilites (3 for each unit, because of 3 groups)
+probsPS <- predict(psModel, type = "probs")
+dat$probA <- probsPS[,"A"]
+dat$probB <- probsPS[,"B"]
+dat$probC <- probsPS[,"C"]
+#Generate two logarithm of risk ratios - equivalent to log-odds in one-dimensional case
+dat$logRR_BvsA <- log(dat$probB/dat$probA)
+dat$logRR_CvsA <- log(dat$probC/dat$probA)
+
+#Match on "log-odds" of PS
+result <- polymatch(group ~ logRR_BvsA + logRR_CvsA, data = dat,
+                    distance = "euclidean")
+
+#Evaluate balance
+resultBalance <- balance(group ~ logRR_BvsA +logRR_CvsA + var1 + var2 + var3 + var4,
+                         match_id = result$match_id, data = dat)
+resultBalance
+resultPlot <- plotBalance(resultBalance, ratioVariances = T)
+
+
+#Match on PS
+result <- polymatch(group ~ probA + probB + probC, data = dat,
+                    distance = "euclidean")
+#Evaluate balance
+resultBalance <- balance(group ~ probA + probB + probC + var1 + var2 + var3 + var4,
+                         match_id = result$match_id, data = dat)
+resultBalance
+resultPlot <- plotBalance(resultBalance, ratioVariances = T)
+
+
+
+library(ggplot2)
+library(tidyr)
+#Before matching
+datLong <- dat[,c("group","probA","probB","probC")] %>%
+  gather(key = probGroup, value = prob, probA, probB, probC)
+datLong$probGroup <- factor(datLong$probGroup)
+ggplot(data = datLong) +
+  geom_density(aes(prob,stat(count),colour=group)) +
+  facet_wrap(~probGroup)
+
+
+#After matching
+datLong <- dat[!is.na(result$match_id),c("group","probA","probB","probC")] %>%
+              gather(key = probGroup, value = prob, probA, probB, probC)
+datLong$probGroup <- factor(datLong$probGroup)
+ggplot(data = datLong) +
+  geom_density(aes(prob,stat(count),colour=group)) +
+  facet_wrap(~probGroup)
+
+
+#Match directly on variables
+result <- polymatch(group ~ var1 + var2, data = dat,
+                    distance = "mahalanobis",
+                    exactMatch = ~var3+var4)
+resultBalance <- balance(group ~ var1 + var2 + var3 + var4,
+                         match_id = result$match_id, data = dat)
+resultBalance
+resultPlot <- plotBalance(resultBalance, ratioVariances = T)
 
