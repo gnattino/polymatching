@@ -170,7 +170,6 @@ resultBalance
 resultPlot <- plotBalance(resultBalance)
 #As expected, total distance is way smaller
 
-
 #Bad choice of order
 result <- polymatch(formulaMatch = group ~ variable, data = dat,
                     distance = "euclidean",
@@ -469,90 +468,91 @@ dat
 ########################
 
 #Generate a datasets with group indicator and four variables:
-# - var1, continuous, sampled from normal distributions;
-# - var2, continuous, sampled from beta distributions;
-# - var3, categorical with 4 levels;
-# - var4, binary.
+#- var1, continuous, sampled from normal distributions;
+#- var2, continuous, sampled from beta distributions;
+#- var3, categorical with 4 levels;
+#- var4, binary.
 set.seed(12345)
 dat <- data.frame(group= c(rep("A",100),rep("B",500),rep("C",500)),
-                  var1=c(rnorm(100,mean=0,sd=1),
-                        rnorm(500,mean=1,sd=2),
-                        rnorm(500,mean=-1,sd=2)),
-                  var2=c(rbeta(100,shape1=1,shape2=1),
-                         rbeta(500,shape1=2,shape2=1),
-                         rbeta(500,shape1=1,shape2=2)),
-                  var3=factor(c(rbinom(100,size=3,prob=.4),
-                              rbinom(500,size=3,prob=.5),
-                              rbinom(500,size=3,prob=.3))),
-                  var4=factor(c(rbinom(100,size=1,prob=.5),
-                              rbinom(500,size=1,prob=.3),
-                              rbinom(500,size=1,prob=.7))))
+                  var1=c(rnorm(100,mean=0,sd=1),rnorm(500,mean=1,sd=2),rnorm(500,mean=-1,sd=2)),
+                  var2=c(rbeta(100,shape1=1,shape2=1),rbeta(500,shape1=2,shape2=1),rbeta(500,shape1=1,shape2=2)),
+                  var3=factor(c(rbinom(100,size=3,prob=.4),rbinom(500,size=3,prob=.5),rbinom(500,size=3,prob=.3))),
+                  var4=factor(c(rbinom(100,size=1,prob=.5),rbinom(500,size=1,prob=.3),rbinom(500,size=1,prob=.7))))
 
+#Match on propensity score
+#-------------------------
 
-#Match on the propensity score
-#-----------------------------
-
-#Fit propensity score model
-library(nnet)
-psModel <- multinom(group ~ var1 + var2 + var3 + var4,
-                    family=binomial(link=logit), data=dat)
-#Generate estimated probabilites (3 for each unit, because of 3 groups)
-probsPS <- predict(psModel, type = "probs")
+#With multiple groups, need a multinomial model for the PS
+library(VGAM)
+psModel <- vglm(group ~ var1 + var2 + var3 + var4,
+                family=multinomial, data=dat)
+#Estimated probabilities - 3 for each unit: P(group=A), P(group=B), P(group=C)
+probsPS <- predict(psModel, type = "response")
 dat$probA <- probsPS[,"A"]
 dat$probB <- probsPS[,"B"]
 dat$probC <- probsPS[,"C"]
-#Generate two logarithm of risk ratios - equivalent to log-odds in one-dimensional case
-dat$logRR_BvsA <- log(dat$probB/dat$probA)
-dat$logRR_CvsA <- log(dat$probC/dat$probA)
+#Estimated logits - 2 for each unit: log(P(group=A)/P(group=C)), log(P(group=B)/P(group=C))
+logitPS <- predict(psModel, type = "link")
+dat$logit_AvsC <- logitPS[,1]
+dat$logit_BvsC <- logitPS[,2]
 
-#Match on "log-odds" of PS
-result <- polymatch(group ~ logRR_BvsA + logRR_CvsA, data = dat,
-                    distance = "euclidean")
+#Match on logits of PS
+resultPs <- polymatch(group ~ logit_AvsC + logit_BvsC, data = dat,
+                      distance = "euclidean")
+dat$match_id_ps <- resultPs$match_id
 
-#Evaluate balance
-resultBalance <- balance(group ~ logRR_BvsA +logRR_CvsA + var1 + var2 + var3 + var4,
-                         match_id = result$match_id, data = dat)
-resultBalance
-resultPlot <- plotBalance(resultBalance, ratioVariances = T)
-
-
-#Match on PS
-result <- polymatch(group ~ probA + probB + probC, data = dat,
-                    distance = "euclidean")
-#Evaluate balance
-resultBalance <- balance(group ~ probA + probB + probC + var1 + var2 + var3 + var4,
-                         match_id = result$match_id, data = dat)
-resultBalance
-resultPlot <- plotBalance(resultBalance, ratioVariances = T)
-
-
-
+#Compare the distributions of propensity score before and after matching
 library(ggplot2)
 library(tidyr)
-#Before matching
-datLong <- dat[,c("group","probA","probB","probC")] %>%
-  gather(key = probGroup, value = prob, probA, probB, probC)
-datLong$probGroup <- factor(datLong$probGroup)
-ggplot(data = datLong) +
+library(gridExtra)
+
+#Distribution of propensity score BEFORE matching
+distrPsBefore <- ggplot(dat %>%
+                          gather(key = probGroup,
+                                 value = prob, probA, probB, probC)) +
   geom_density(aes(prob,stat(count),colour=group)) +
-  facet_wrap(~probGroup)
-
-
-#After matching
-datLong <- dat[!is.na(result$match_id),c("group","probA","probB","probC")] %>%
-              gather(key = probGroup, value = prob, probA, probB, probC)
-datLong$probGroup <- factor(datLong$probGroup)
-ggplot(data = datLong) +
+  facet_wrap(~factor(probGroup))
+#Distribution of propensity score AFTER matching
+distrPsAfter <- ggplot(dat %>%
+                         drop_na(match_id_ps) %>%
+                         gather(key = probGroup,
+                                value = prob, probA, probB, probC)) +
   geom_density(aes(prob,stat(count),colour=group)) +
-  facet_wrap(~probGroup)
+  facet_wrap(~factor(probGroup))
+#Single plot with the two distributions
+grid.arrange(distrPsBefore +
+               labs(title="Distribution of PS before matching"),
+             distrPsAfter +
+               labs(title="Distribution of PS after matching"),
+             nrow = 2)
 
+#Evaluate balance in covariates
+tabBalancePs <- balance(group ~ var1 + var2 + var3 + var4,
+                        match_id = dat$match_id_ps, data = dat)
+tabBalancePs
+plotPs <- plotBalance(tabBalancePs, ratioVariances = T)
 
-#Match directly on variables
-result <- polymatch(group ~ var1 + var2, data = dat,
-                    distance = "mahalanobis",
-                    exactMatch = ~var3+var4)
-resultBalance <- balance(group ~ var1 + var2 + var3 + var4,
-                         match_id = result$match_id, data = dat)
-resultBalance
-resultPlot <- plotBalance(resultBalance, ratioVariances = T)
+#Match on covariates
+#--------------------
 
+#Match on continuous covariates with exact match on categorical/binary variables
+resultCov <- polymatch(group ~ var1 + var2, data = dat,
+                       distance = "mahalanobis",
+                       exactMatch = ~var3+var4)
+dat$match_id_cov <- resultCov$match_id
+
+#Evaluate balance
+tabBalanceCov <- balance(group ~ var1 + var2 + var3 + var4,
+                         match_id = dat$match_id_cov, data = dat)
+tabBalanceCov
+plotCov <- plotBalance(tabBalanceCov, ratioVariances = T)
+
+#Compare balance between the two matched samples
+#-----------------------------------------------
+library(gridExtra)
+
+grid.arrange(plotPs[[1]] +
+               labs(title="Stand. Differences - Matching on PS"),
+             plotCov[[1]] +
+               labs(title="Stand. Differences - Matching on Covariates"),
+             ncol = 2)

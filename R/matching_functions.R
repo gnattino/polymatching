@@ -205,7 +205,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #If there are some variables to match exactly on, do that:
   if(!is.null(varsExactMatch)) {
 
-    formulaExactMatch <- as.formula(paste0("groupNew ~ ",paste(varsExactMatch, collapse = "+")))
+    formulaExactMatch <- stats::as.formula(paste0("groupNew ~ ",paste(varsExactMatch, collapse = "+")))
 
     resultExactMatch <- optmatch::exactMatch(formulaExactMatch, data = data[selectionToMatch,])
 

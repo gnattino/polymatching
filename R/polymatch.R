@@ -58,11 +58,65 @@
 #' argument. The current implementation supports Euclidean (\code{distance="euclidean"}) and Mahalanobis (\code{distance="mahalanobis"})
 #' distances. In particular, for the Mahalanobis distance, the covariance matrix is defined only once on the full dataset.
 #'
+#' @seealso \link{\code{balance}} and \link{\code{plotBalance}} to summarize the
+#' balance in the covariates.
+#'
 #' @examples
-#' plot(1, 1)
+#' #Generate a datasets with group indicator and four variables:
+#' #- var1, continuous, sampled from normal distributions;
+#' #- var2, continuous, sampled from beta distributions;
+#' #- var3, categorical with 4 levels;
+#' #- var4, binary.
+#' set.seed(12345)
+#' dat <- data.frame(group= c(rep("A",100),rep("B",500),rep("C",500)),
+#'                   var1=c(rnorm(100,mean=0,sd=1),rnorm(500,mean=1,sd=2),rnorm(500,mean=-1,sd=2)),
+#'                   var2=c(rbeta(100,shape1=1,shape2=1),rbeta(500,shape1=2,shape2=1),rbeta(500,shape1=1,shape2=2)),
+#'                   var3=factor(c(rbinom(100,size=3,prob=.4),rbinom(500,size=3,prob=.5),rbinom(500,size=3,prob=.3))),
+#'                   var4=factor(c(rbinom(100,size=1,prob=.5),rbinom(500,size=1,prob=.3),rbinom(500,size=1,prob=.7))))
+#'
+#' #Match on propensity score
+#' #-------------------------
+#'
+#' #With multiple groups, need a multinomial model for the PS
+#' library(VGAM)
+#' psModel <- vglm(group ~ var1 + var2 + var3 + var4,
+#'                 family=multinomial, data=dat)
+#' #Estimated probabilities - 3 for each unit: P(group=A), P(group=B), P(group=C)
+#' probsPS <- predict(psModel, type = "response")
+#' dat$probA <- probsPS[,"A"]
+#' dat$probB <- probsPS[,"B"]
+#' dat$probC <- probsPS[,"C"]
+#' #Estimated logits - 2 for each unit: log(P(group=A)/P(group=C)), log(P(group=B)/P(group=C))
+#' logitPS <- predict(psModel, type = "link")
+#' dat$logit_AvsC <- logitPS[,1]
+#' dat$logit_BvsC <- logitPS[,2]
+#'
+#' #Match on logits of PS
+#' resultPs1 <- polymatch(group ~ logit_AvsC + logit_BvsC, data = dat,
+#'                     distance = "euclidean")
+#' dat$match_id_ps1 <- resultPs1$match_id
+#'
+#' #Match on probabilities
+#' resultPs2 <- polymatch(group ~ probA + probB + probC, data = dat,
+#'                        distance = "euclidean")
+#' dat$match_id_ps2 <- resultPs2$match_id
+#'
+#' #Match on covariates
+#' #--------------------
+#'
+#' #Match on continuous covariates only
+#' resultCov1 <- polymatch(group ~ var1 + var2, data = dat,
+#'                         distance = "mahalanobis")
+#' dat$match_id_cov1 <- resultCov1$match_id
+#'
+#' #Match on continuous covariates with exact match on categorical/binary variables
+#' resultCov2 <- polymatch(group ~ var1 + var2, data = dat,
+#'                         distance = "mahalanobis",
+#'                         exactMatch = ~var3+var4)
+#' dat$match_id_cov2 <- resultCov2$match_id
 #'
 #' @export
-polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, iterate = T, niter_max = 50, verbose = T) {
+polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE) {
 
   #Debug/devel:
   #------------
@@ -71,9 +125,9 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   # data <- generateData(c(30,10,40,20))
   # distance = "euclidean"
   # start = "small.to.large"
-  # iterate = T
+  # iterate = TRUE
   # niter_max = 50
-  # verbose = T
+  # verbose = TRUE
 
   #browser()
   #Check types of inputs
@@ -105,7 +159,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   }
 
   # Say some stuff
-  if(verbose==T) {
+  if(verbose==TRUE) {
 
     cat("Conditional optimal matching algorithm\n")
     cat("Number of observations: ",nrow(data),"\n")
@@ -185,7 +239,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   }
 
   # Say some stuff
-  if(verbose==T) {
+  if(verbose==TRUE) {
     cat("Total distance of starting matched sample: ", sprintf("%.3f",total_distance_start),"\n")
     #cat("\n")
   }
@@ -230,7 +284,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
           best_match_id <- resultIter$match_id
           best_total_distance <- resultIter$total_distance
-          improvementInIteration <- T
+          improvementInIteration <- TRUE
         }
 
       }
@@ -240,7 +294,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
       }
 
       # Say some stuff
-      if(verbose==T) {
+      if(verbose==TRUE) {
         cat("Ended iteration ", niter, " - total distance:", sprintf("%.3f",best_total_distance),"\n")
         #cat("\n")
       }
@@ -255,13 +309,13 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
   }
 
-  if(verbose == T) {
+  if(verbose == TRUE) {
     cat("End \n")
     cat(paste0("Number of iterations: ", niter,", total distance:", sprintf("%.3f",best_total_distance),"\n"))
     cat("Number of matched sets: ", length(unique(best_match_id[!is.na(best_match_id)])),"\n")
   }
 
-  if(iterate == T & niter>=niter_max) {
+  if(iterate == TRUE & niter>=niter_max) {
     warning("The algorithm reached the maximum number of iterations--you can increase it with the argument 'niter_max'")
   }
 
