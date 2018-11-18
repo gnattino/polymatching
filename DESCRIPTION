@@ -4,8 +4,8 @@ Title: A Matching Algorithm for Designs with Multiple Groups
 Version: 0.1.0
 Authors@R: c(
     person("Giovanni", "Nattino", email = "nattino.1@osu.edu", role = c("aut", "cre")),
-    person("Bo", "Lu", email = "lu.232@osu.edu", role = "aut"),
-    person("Chi", "Song", email = "lsong.1188@osu.edu", role = "aut"))
+    person("Bo", "Lu", role = "aut"),
+    person("Chi", "Song", role = "aut"))
 Description: Includes functions for conditionally optimal matching, a matching algorithm to 
     generate matched sample in designs with 3, 4, 5 and 6 groups. 
 License: GPL-3
