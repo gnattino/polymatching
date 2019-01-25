@@ -216,6 +216,8 @@ balance <- function(formulaBalance, match_id, data) {
 #' @param ratioVariances Boolean. If \code{TRUE}, the generated plot contains two panels:
 #' one for the standardized differences and one for the ratios of the variances. If \code{FALSE}
 #' (the default), only the standardized differences are represented.
+#' @param boxplots Boolean. If \code{TRUE} (default), boxplots are added to the plot, to show the
+#' distribution of the standardized differences and ratios of the variances.
 #'
 #' @return If at least one of the covariates is continuous and \code{ratioVariances=TRUE},
 #' the function generates a plot with two panels: one for the
@@ -231,7 +233,7 @@ balance <- function(formulaBalance, match_id, data) {
 #' #See examples of function 'balance'
 #'
 #' @export
-plotBalance <- function(dataBalance, ratioVariances = FALSE) {
+plotBalance <- function(dataBalance, ratioVariances = FALSE, boxplots = TRUE) {
 
   #Data for standardized difference
   keepVarsStdzDiff <- c("groups","variable","stdzDiffPre","stdzDiffPost")
@@ -284,10 +286,6 @@ plotBalance <- function(dataBalance, ratioVariances = FALSE) {
   }
 
   plotStdzDiff <- ggplot2::ggplot(data = dataBalanceStdzDiff) +
-    ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
-                                       y = "stdzDiff",
-                                       colour= "pre_post"),
-                          outlier.shape = NA) +
     ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
                                        y = "stdzDiff",
                                        colour= "pre_post"), size = 2) +
@@ -300,14 +298,18 @@ plotBalance <- function(dataBalance, ratioVariances = FALSE) {
     ggplot2::geom_hline(yintercept=0,  colour = "red", size = 1.2, linetype = "dashed") +
     ggplot2::guides(fill=FALSE, colour = FALSE)
 
+  if(boxplots==T) {
+    plotStdzDiff <- plotStdzDiff +
+      ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
+                                                  y = "stdzDiff",
+                                                  colour= "pre_post"),
+                            outlier.shape = NA)
+    }
+
   #Plot of ratio of variances only if there is at least one continuous variable
   if(nrow(dataBalanceRatioVars)>0) {
 
     plotRatioVars <- ggplot2::ggplot(data = dataBalanceRatioVars) +
-      ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
-                                         y = "ratioVars",
-                                         colour= "pre_post"),
-                            outlier.shape = NA)  +
       ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
                                         y = "ratioVars",
                                         colour= "pre_post"), size = 2) +
@@ -319,6 +321,14 @@ plotBalance <- function(dataBalance, ratioVariances = FALSE) {
       ggplot2::ylab("Ratio of Variances") +
       ggplot2::geom_hline(yintercept=1,  colour = "red", size = 1.2, linetype = "dashed") +
       ggplot2::guides(fill=FALSE, colour = FALSE)
+
+    if(boxplots==T) {
+      plotRatioVars <- plotRatioVars +
+        ggplot2::geom_boxplot(ggplot2::aes_string(x = "pre_post",
+                                                  y = "ratioVars",
+                                                  colour= "pre_post"),
+                              outlier.shape = NA)
+    }
 
   } else {
 

@@ -337,55 +337,59 @@ resultPlot <- plotBalance(resultBalance,ratioVariances = T)
 load("C:/Users/natt03/Desktop/triplet matching/analysis/bestResult_3wayconstr_allData_1-2.Rdata")
 dat <- result3wayConstr$matchedData
 
-dat$income_1 <- factor(dat$income_1)
-dat$income_2 <- factor(dat$income_2)
-dat$income_3 <- factor(dat$income_3)
-dat$income_4 <- factor(dat$income_4)
-dat$pay1_1 <- factor(dat$pay1_1)
-dat$pay1_2 <- factor(dat$pay1_2)
-dat$pay1_3 <- factor(dat$pay1_3)
-dat$pay1_4 <- factor(dat$pay1_4)
-dat$pay1_5 <- factor(dat$pay1_5)
-dat$pay1_6 <- factor(dat$pay1_6)
-dat$nchs_1 <- factor(dat$nchs_1)
-dat$nchs_2 <- factor(dat$nchs_2)
-dat$nchs_3 <- factor(dat$nchs_3)
-dat$nchs_4 <- factor(dat$nchs_4)
-dat$nchs_5 <- factor(dat$nchs_5)
-dat$nchs_6 <- factor(dat$nchs_6)
-dat$chronic <- factor(dat$chronic)
-dat$multiple_injury <- factor(dat$multiple_injury)
-dat$FEMALE <- factor(dat$FEMALE)
+dat$Age <- dat$AGE
+dat$ISS <- dat$iss
+dat$Income.Q1 <- factor(dat$income_1)
+dat$Income.Q2 <- factor(dat$income_2)
+dat$Income.Q3 <- factor(dat$income_3)
+dat$Income.Q4 <- factor(dat$income_4)
+dat$Payer.Medicare <- factor(dat$pay1_1)
+dat$Payer.Medicaid <- factor(dat$pay1_2)
+dat$Payer.PrivInsur <- factor(dat$pay1_3)
+dat$Payer.SelfPay <- factor(dat$pay1_4)
+dat$Payer.NoCharge <- factor(dat$pay1_5)
+dat$Payer.Other <- factor(dat$pay1_6)
+dat$Loc.LargeMetroCentral <- factor(dat$nchs_1)
+dat$Loc.LargeMetroFringe <- factor(dat$nchs_2)
+dat$Loc.MediumMetro <- factor(dat$nchs_3)
+dat$Loc.SmallMetro <- factor(dat$nchs_4)
+dat$Loc.Micro <- factor(dat$nchs_5)
+dat$Loc.Other <- factor(dat$nchs_6)
+dat$Chron.Condition <- factor(dat$chronic)
+dat$Mult.Injury <- factor(dat$multiple_injury)
+dat$Female <- factor(dat$FEMALE)
 
 #E.g. 1 - plot on two columns
-resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
-                           income_1 + income_2 + income_3 + income_4 +
-                           pay1_1 + pay1_2 + pay1_3 + pay1_4 + pay1_5 + pay1_6 +
-                           nchs_1 + nchs_2 + nchs_3 + nchs_4 + nchs_5 + nchs_6 +
-                           chronic + multiple_injury +
-                           FEMALE,
+resultBalance <- balance(HOSP_TRAUMA ~ Age + Female + ISS + Chron.Condition + Mult.Injury +
+                           Income.Q1 + Income.Q2 + Income.Q3 + Income.Q4 +
+                           Payer.Medicare + Payer.Medicaid + Payer.PrivInsur + Payer.SelfPay + Payer.NoCharge + Payer.Other +
+                           Loc.LargeMetroCentral + Loc.LargeMetroFringe + Loc.MediumMetro + Loc.SmallMetro + Loc.Micro + Loc.Other,
                          data = dat, match_id = dat$indexMatch)
 resultBalance
 
-resultPlot <- plotBalance(resultBalance)
+resultPlot <- plotBalance(resultBalance, boxplots = FALSE)
 # pdf("C:/Users/natt03/Desktop/triplet matching/analysis/balancePlot.pdf", height = 15, width = 6)
 # print(resultPlot[[1]])
 # dev.off()
 
+pdf("C:/Users/natt03/Desktop/triplet matching/Presentation ENAR/balancePlot.pdf", height = 10, width = 17.8)
+resultPlot$plotStdzDiff + ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 3)
+dev.off()
+
 #E.g. 2 - split balance in two
-resultBalance1 <- balance(HOSP_TRAUMA ~ AGE + iss +
-                           income_1 + income_2 + income_3 + income_4 +
-                           pay1_1 + pay1_2 + pay1_3 + pay1_4 + pay1_5 + pay1_6,
+resultBalance1 <- balance(HOSP_TRAUMA ~ Age + Female + ISS + Chron.Condition + Mult.Injury +
+                            Payer.Medicare + Payer.Medicaid + Payer.PrivInsur + Payer.SelfPay + Payer.NoCharge + Payer.Other,
                          data = dat, match_id = dat$indexMatch)
-resultBalance2 <- balance(HOSP_TRAUMA ~ nchs_1 + nchs_2 + nchs_3 + nchs_4 + nchs_5 + nchs_6 +
-                            chronic + multiple_injury + FEMALE,
+resultBalance2 <- balance(HOSP_TRAUMA ~ Income.Q1 + Income.Q2 + Income.Q3 + Income.Q4 +
+                            Loc.LargeMetroCentral + Loc.LargeMetroFringe + Loc.MediumMetro + Loc.SmallMetro + Loc.Micro + Loc.Other,
                          data = dat, match_id = dat$indexMatch)
-resultPlot1 <- plotBalance(resultBalance1)
-resultPlot2 <- plotBalance(resultBalance2)
+resultPlot1 <- plotBalance(resultBalance1, boxplots = FALSE)
+resultPlot2 <- plotBalance(resultBalance2, boxplots = FALSE)
 
 library(gridExtra)
 library(ggplot2)
 grid.arrange(resultPlot1[[1]] + labs(title=""),resultPlot2[[1]] + labs(title=""), ncol = 2)
+
 
 #E.g. 3 - plot with ratio variances
 resultBalance <- balance(HOSP_TRAUMA ~ AGE + iss +
