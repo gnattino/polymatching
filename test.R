@@ -37,7 +37,6 @@ generateData <- function(nVect, par = NULL) {
 # Check #
 #########
 
-
 #Check starting points
 #---------------------
 set.seed(123456)
