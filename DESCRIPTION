@@ -7,7 +7,7 @@ Authors@R: c(
     person("Bo", "Lu", role = "aut"),
     person("Chi", "Song", role = "aut"))
 Description: Includes functions for conditionally optimal matching, a matching algorithm to 
-    generate matched sample in designs with 3, 4, 5 and 6 groups. 
+    generate matched sample in designs with multiple treatment groups. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
