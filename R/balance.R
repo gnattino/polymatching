@@ -294,9 +294,10 @@ plotBalance <- function(dataBalance, ratioVariances = FALSE, boxplots = TRUE) {
   }
 
   plotStdzDiff <- ggplot2::ggplot(data = dataBalanceStdzDiff) +
-    ggplot2::geom_jitter(ggplot2::aes_string(x = "pre_post",
-                                       y = "stdzDiff",
-                                       colour= "pre_post"), size = 2) +
+    ggplot2::aes_string(x = "pre_post",
+                        y = "stdzDiff",
+                        colour= "pre_post") +
+    ggplot2::geom_jitter(size = 2) +
     ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = numberColumnsStdzDiff)  +
     ggplot2::coord_flip() +
     ggplot2::theme_bw() +
