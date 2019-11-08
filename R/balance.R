@@ -132,7 +132,7 @@ balance <- function(formulaBalance, match_id, data) {
 
   #Check coherence of data (as above)
   resultCheckData <- checkData(formulaMatch = formulaBalance, start = match_id,
-                               data = data, exactMatch = NULL)
+                               data = data, exactMatch = NULL, checkOnePerGroup = FALSE)
   varGroup <- resultCheckData$varGroup
   varsBalance <- resultCheckData$varsMatch
 

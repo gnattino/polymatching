@@ -21,7 +21,7 @@ checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate
 
 #' Check coherence of inputs with data
 #' @keywords internal
-checkData <- function(formulaMatch, start, data, exactMatch){
+checkData <- function(formulaMatch, start, data, exactMatch, checkOnePerGroup = TRUE){
   #browser()
 
   varsFromFormula <- all.vars(formulaMatch)
@@ -67,13 +67,18 @@ checkData <- function(formulaMatch, start, data, exactMatch){
   }
 
   if(length(start) > 1) {
-
-    # Check that the starting point has exactly 1 subject per group
-    tabStartGroup <- table(start, data[,varGroup])
-    if(!all(tabStartGroup==1)) {
-      stop("The matched sets provided in 'start' must have exactly one subject per group")
+    
+    if(checkOnePerGroup == TRUE) {
+      
+      # Check that the starting point has exactly 1 subject per group
+      tabStartGroup <- table(start, data[,varGroup])
+      if(!all(tabStartGroup==1)) {
+        stop("The matched sets provided in 'start' must have exactly one subject per group")
+      }
+      
     }
 
+    
     #Check that all the subjects in the smallest group(s) are matched
     smallestGroups <- names(tabGroup)[tabGroup==min(tabGroup)]
     if( sum(is.na(start[data[,varGroup] %in% smallestGroups]))>0) {
