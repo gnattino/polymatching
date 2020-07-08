@@ -14,4 +14,4 @@ LazyData: TRUE
 Imports: optmatch, ggplot2, tidyr, gridExtra, utils, stats
 Suggests: VGAM, knitr, rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.0.0
+RoxygenNote: 7.1.1
