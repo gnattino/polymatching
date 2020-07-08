@@ -25,19 +25,19 @@
 #' #- var3, categorical with 4 levels;
 #' #- var4, binary.
 #' set.seed(12345)
-#' dat <- data.frame(group = c(rep("A",100),rep("B",500),rep("C",500)),
-#'                   var1 = c(rnorm(100,mean=0,sd=1),
-#'                            rnorm(500,mean=1,sd=2),
-#'                            rnorm(500,mean=-1,sd=2)),
-#'                   var2 = c(rbeta(100,shape1=1,shape2=1),
-#'                            rbeta(500,shape1=2,shape2=1),
-#'                            rbeta(500,shape1=1,shape2=2)),
-#'                   var3 = factor(c(rbinom(100,size=3,prob=.4),
-#'                                   rbinom(500,size=3,prob=.5),
-#'                                   rbinom(500,size=3,prob=.3))),
-#'                   var4 = factor(c(rbinom(100,size=1,prob=.5),
-#'                                   rbinom(500,size=1,prob=.3),
-#'                                   rbinom(500,size=1,prob=.7))))
+#' dat <- data.frame(group = c(rep("A",20),rep("B",150),rep("C",150)),
+#'                   var1 = c(rnorm(20,mean=0,sd=1),
+#'                            rnorm(150,mean=1,sd=2),
+#'                            rnorm(150,mean=-1,sd=2)),
+#'                   var2 = c(rbeta(20,shape1=1,shape2=1),
+#'                            rbeta(150,shape1=2,shape2=1),
+#'                            rbeta(150,shape1=1,shape2=2)),
+#'                   var3 = factor(c(rbinom(20,size=3,prob=.4),
+#'                                   rbinom(150,size=3,prob=.5),
+#'                                   rbinom(150,size=3,prob=.3))),
+#'                   var4 = factor(c(rbinom(20,size=1,prob=.5),
+#'                                   rbinom(150,size=1,prob=.3),
+#'                                   rbinom(150,size=1,prob=.7))))
 #'
 #' #Match on propensity score
 #' #-------------------------
