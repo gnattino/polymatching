@@ -151,7 +151,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     #For Mahalanobis distance, need the inverse of Sigma
     if(distance == "mahalanobis") {
       SigmaInv <- try(chol2inv(chol(Sigma)), silent = T)
-      if(class(SigmaInv)=="try-error") {
+      if("try-error" %in% class(SigmaInv) ) {
         stop("Problems in the computation of Mahalanobis distance, error inverting vcov matrix. Try using distance='euclidean'. ")
       }
     }
