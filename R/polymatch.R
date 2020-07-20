@@ -77,20 +77,20 @@
 #' #- var2, continuous, sampled from beta distributions;
 #' #- var3, categorical with 4 levels;
 #' #- var4, binary.
-#' set.seed(12345)
-#' dat <- data.frame(group = c(rep("A",20),rep("B",150),rep("C",150)),
-#'                   var1 = c(rnorm(20,mean=0,sd=1),
-#'                            rnorm(150,mean=1,sd=2),
-#'                            rnorm(150,mean=-1,sd=2)),
-#'                   var2 = c(rbeta(20,shape1=1,shape2=1),
-#'                            rbeta(150,shape1=2,shape2=1),
-#'                            rbeta(150,shape1=1,shape2=2)),
-#'                   var3 = factor(c(rbinom(20,size=3,prob=.4),
-#'                                   rbinom(150,size=3,prob=.5),
-#'                                   rbinom(150,size=3,prob=.3))),
-#'                   var4 = factor(c(rbinom(20,size=1,prob=.5),
-#'                                   rbinom(150,size=1,prob=.3),
-#'                                   rbinom(150,size=1,prob=.7))))
+#' set.seed(1234567)
+#' dat <- data.frame(group = c(rep("A",30),rep("B",70),rep("C",70)),
+#'                   var1 = c(rnorm(30,mean=0,sd=1),
+#'                            rnorm(70,mean=1,sd=2),
+#'                            rnorm(70,mean=-1,sd=2)),
+#'                   var2 = c(rbeta(30,shape1=1,shape2=1),
+#'                            rbeta(70,shape1=2,shape2=1),
+#'                            rbeta(70,shape1=1,shape2=2)),
+#'                   var3 = factor(c(rbinom(30,size=3,prob=.4),
+#'                                   rbinom(70,size=3,prob=.5),
+#'                                   rbinom(70,size=3,prob=.3))),
+#'                   var4 = factor(c(rbinom(30,size=1,prob=.5),
+#'                                   rbinom(70,size=1,prob=.3),
+#'                                   rbinom(70,size=1,prob=.7))))
 #'
 #' #Match on propensity score
 #' #-------------------------
