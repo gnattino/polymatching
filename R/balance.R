@@ -1,6 +1,6 @@
 #' Evaluating the Balance of Covariates After Matching
 #'
-#' The function \code{balance} computes the standardized differences and the ratio of the variances among treatment groups,
+#' The function \code{balance} computes the standardized mean differences and the ratio of the variances among treatment groups,
 #' before and after matching. The function computes the two measures of balance for each pair of treatment groups.
 #'
 #' @param formulaBalance Formula with form \code{group ~ x_1 + ... + x_p}. \code{group} is the variable
@@ -25,19 +25,19 @@
 #' #- var3, categorical with 4 levels;
 #' #- var4, binary.
 #' set.seed(1234567)
-#' dat <- data.frame(group = c(rep("A",30),rep("B",70),rep("C",70)),
-#'                   var1 = c(rnorm(30,mean=0,sd=1),
-#'                            rnorm(70,mean=1,sd=2),
-#'                            rnorm(70,mean=-1,sd=2)),
-#'                   var2 = c(rbeta(30,shape1=1,shape2=1),
-#'                            rbeta(70,shape1=2,shape2=1),
-#'                            rbeta(70,shape1=1,shape2=2)),
-#'                   var3 = factor(c(rbinom(30,size=3,prob=.4),
-#'                                   rbinom(70,size=3,prob=.5),
-#'                                   rbinom(70,size=3,prob=.3))),
-#'                   var4 = factor(c(rbinom(30,size=1,prob=.5),
-#'                                   rbinom(70,size=1,prob=.3),
-#'                                   rbinom(70,size=1,prob=.7))))
+#' dat <- data.frame(group = c(rep("A",20),rep("B",60),rep("C",60)),
+#'                   var1 = c(rnorm(20,mean=0,sd=1),
+#'                            rnorm(60,mean=1,sd=2),
+#'                            rnorm(60,mean=-1,sd=2)),
+#'                   var2 = c(rbeta(20,shape1=1,shape2=1),
+#'                            rbeta(60,shape1=2,shape2=1),
+#'                            rbeta(60,shape1=1,shape2=2)),
+#'                   var3 = factor(c(rbinom(20,size=3,prob=.4),
+#'                                   rbinom(60,size=3,prob=.5),
+#'                                   rbinom(60,size=3,prob=.3))),
+#'                   var4 = factor(c(rbinom(20,size=1,prob=.5),
+#'                                   rbinom(60,size=1,prob=.3),
+#'                                   rbinom(60,size=1,prob=.7))))
 #'
 #' #Match on propensity score
 #' #-------------------------
@@ -61,35 +61,13 @@
 #'                     distance = "euclidean")
 #' dat$match_id_ps <- resultPs$match_id
 #'
-#' #Compare the distributions of propensity score before and after matching
-#' library(ggplot2)
-#' library(tidyr)
-#' library(gridExtra)
-#' #Distribution of propensity score BEFORE matching
-#' distrPsBefore <- ggplot(dat %>%
-#'                           gather(key = probGroup,
-#'                                  value = prob, probA, probB, probC)) +
-#'   geom_density(aes(prob,stat(count),colour=group)) +
-#'   facet_wrap(~factor(probGroup))
-#' #Distribution of propensity score AFTER matching
-#' distrPsAfter <- ggplot(dat %>%
-#'                          drop_na(match_id_ps) %>%
-#'                          gather(key = probGroup,
-#'                                 value = prob, probA, probB, probC)) +
-#'   geom_density(aes(prob,stat(count),colour=group)) +
-#'   facet_wrap(~factor(probGroup))
-#' #Single plot with the two distributions
-#' grid.arrange(distrPsBefore +
-#'                labs(title="Distribution of PS before matching"),
-#'              distrPsAfter +
-#'                labs(title="Distribution of PS after matching"),
-#'              nrow = 2)
-#'
 #' #Evaluate balance in covariates
 #' tabBalancePs <- balance(group ~ var1 + var2 + var3 + var4,
 #'                         match_id = dat$match_id_ps, data = dat)
 #' tabBalancePs
-#' plotBalance(tabBalancePs, ratioVariances = TRUE)
+#'
+#' #You can also represent the standardized mean differences with 'plotBalance'
+#' #plotBalance(tabBalancePs, ratioVariances = TRUE)
 #'
 #' @export
 balance <- function(formulaBalance, match_id, data) {
