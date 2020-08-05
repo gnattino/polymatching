@@ -16,3 +16,12 @@ The function implementing the matching algorithm is `polymatch`. The algorithm i
 
 Balance in key covariates can be evaluated with the function `balance`. Given a matched sample and a set of covariates of interest, the function computes the standardized differences and the ratio of the variances for each pair of treatment groups in the study design. For 3, 4, 5 and 6 groups, there are 3, 6, 10 and 15 pairs of groups and the balance is evaluated before and after matching. The result of balance can be graphically represented with `plotBalance`.
 
+
+## Installation
+
+You can install the package with the function `install_github` of the package `devtools`.
+
+```
+library(devtools)
+install_github("gnattino/polymatching")
+```
