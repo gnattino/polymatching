@@ -4,7 +4,7 @@
 \alias{balanceContVar}
 \title{Balance indicators for continuous variables}
 \usage{
-balanceContVar(data, varBalance, match_id, varGroup, pairGroups)
+balanceContVar(data, varBalance, match_id, varGroup, pairGroups, varWeights)
 }
 \description{
 Balance indicators for continuous variables

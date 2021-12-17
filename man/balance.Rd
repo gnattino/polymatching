@@ -4,7 +4,13 @@
 \alias{balance}
 \title{Evaluating the Balance of Covariates After Matching}
 \usage{
-balance(formulaBalance, match_id, data)
+balance(
+  formulaBalance,
+  match_id,
+  data,
+  weights_before = NULL,
+  weights_after = NULL
+)
 }
 \arguments{
 \item{formulaBalance}{Formula with form \code{group ~ x_1 + ... + x_p}. \code{group} is the variable
@@ -16,6 +22,12 @@ Factor variables with two levels are treated as binary.}
 \code{\link{polymatch}}.}
 
 \item{data}{The \code{data.frame} object with the data.}
+
+\item{weights_before}{Optional vector of weights of the observations to be considered in the unmatched dataset. To compute the
+unweighted standardized mean differences, set \code{weights_before} to NULL (default).}
+
+\item{weights_after}{Vector of weights for the matched dataset. Set it to NULL (default) to compute the
+unweighted standardized mean differences.}
 }
 \value{
 A \code{data.frame} containing the standardized differences and ratios of the variances (only for continuous

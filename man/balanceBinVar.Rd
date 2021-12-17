@@ -4,7 +4,7 @@
 \alias{balanceBinVar}
 \title{Balance indicators for binary variables}
 \usage{
-balanceBinVar(data, varBalance, match_id, varGroup, pairGroups)
+balanceBinVar(data, varBalance, match_id, varGroup, pairGroups, varWeights)
 }
 \description{
 Balance indicators for binary variables

@@ -11,6 +11,6 @@ Description: Includes functions implementing the conditionally optimal matching 
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
-Imports: optmatch, ggplot2, gridExtra, tidyr, utils, stats
+Imports: optmatch, ggplot2, gridExtra, tidyr, utils, stats, dplyr, magrittr
 Suggests: VGAM, knitr, rmarkdown
 RoxygenNote: 7.1.1
