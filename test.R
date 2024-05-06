@@ -333,7 +333,7 @@ resultPlot <- plotBalance(resultBalance,ratioVariances = T)
 
 #Check balance (3) - our matched dataset
 #-----------------------------------------------
-load("C:/Users/natt03/Desktop/triplet matching/analysis/bestResult_3wayconstr_allData_1-2.Rdata")
+load("C:/Users/giova/Google Drive/PhD/Classes/Individual study - Propensity score/NCH data/bestResult_3wayconstr_allData_1-2.Rdata")
 dat <- result3wayConstr$matchedData
 
 dat$Age <- dat$AGE
@@ -371,8 +371,11 @@ resultPlot <- plotBalance(resultBalance, boxplots = FALSE)
 # print(resultPlot[[1]])
 # dev.off()
 
-pdf("C:/Users/natt03/Desktop/triplet matching/Presentation ENAR/balancePlot.pdf", height = 10, width = 17.8)
-resultPlot$plotStdzDiff + ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 3)
+pdf("C:/Users/giova/Google Drive/PhD/Classes/Individual study - Propensity score/Presentation JSM/balancePlot.pdf", height = 10, width = 17.8)
+resultPlot$plotStdzDiff + ggplot2::facet_wrap(~variable, dir = "v", strip.position = "left", ncol = 3) +
+  ggplot2::labs(title=element_blank()) +
+  ggplot2::theme(axis.text=element_text(size=20),
+                 axis.title=element_text(size=22))
 dev.off()
 
 #E.g. 2 - split balance in two
