@@ -65,7 +65,8 @@ evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
 condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
                             distance, Sigma,
-                            varsExactMatch) {
+                            varsExactMatch,
+                            k) {
 
 
   #Local function for conditional matching:
@@ -84,6 +85,8 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     varGroup <- get("varGroup",envir = envExternalFun)
     varIndexMatch1 <- get("varIndexMatch1",envir = envExternalFun)
     varIndexMatch2 <- get("varIndexMatch2",envir = envExternalFun)
+    groups1 <- get("groups1",envir = envExternalFun)
+    groups2 <- get("groups2",envir = envExternalFun)
 
     #Generate indexDf is a matrix with all the treated-control pairs as rows.
     indexDf <- as.data.frame(index, stringsAsFactors = F)
@@ -117,7 +120,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
     # - group 1
     if(length(groups1)>=2) {
-      matchingVector1 <- match(indexDf[, paste("group",groups1[1],sep="")],
+      matchingVector1 <- match(indexDf[, paste("group", groups1[1],sep="")],
                                wideIndexGroup1[, paste("group", groups1[1], sep="")])
       indexDf[, paste("group",
                       groups1[2:length(groups1)], sep = "") ] <- wideIndexGroup1[matchingVector1,
@@ -177,6 +180,29 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   ############################################################################################
 
+  #Modify groups' name: when group X have k subjects matched,
+  # define groups X.1, X.2, ..., X.k. Subjects are randomly allocated
+  # to groups. This is not problematic as we compute all pairwise distances
+  # so it does not matter which subject is in which group.
+  data <- data %>%
+    dplyr::group_by(!!as.symbol(varGroup), !!as.symbol(varIndexMatch1)) %>%
+    dplyr::mutate(id_rep_group_1 = dplyr::row_number()) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(!!as.symbol(varGroup), !!as.symbol(varIndexMatch2)) %>%
+    dplyr::mutate(id_rep_group_2 = dplyr::row_number()) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      varGroupNew = dplyr::case_when(
+        !is.na(!!as.symbol(varIndexMatch1)) ~ paste0(!!as.symbol(varGroup), ".", id_rep_group_1),
+        !is.na(!!as.symbol(varIndexMatch2)) ~ paste0(!!as.symbol(varGroup), ".", id_rep_group_2)
+      )
+      ) %>%
+    as.data.frame()
+  data[,varGroup] <- data$varGroupNew
+  data$varGroupNew <- NULL
+  data$id_rep_group_1 <- NULL
+  data$id_rep_group_2 <- NULL
+
   groups1 <- sort(unique(data[!is.na(data[,varIndexMatch1]), varGroup]))
   groups2 <- sort(unique(data[!is.na(data[,varIndexMatch2]), varGroup]))
 
@@ -199,7 +225,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #Make treatment variable binary. Package optmatch deprecated factor type for treatment variables.
   data$groupNew <- (data$groupNew == (levels(data$groupNew)[2]))*1
 
-  #Global variables to be used in the function 'applyPersonalDistance'
+  #Global variable to be used in the function 'applyPersonalDistance'
   dataAll <-  data
 
   #If there are some variables to match exactly on, do that:
@@ -227,8 +253,8 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
   #The possible caliper is a direct truncation of all the distances within that value
 
   resultMatch <- optmatch::pairmatch(resultDistance,
-                           controls = 1,
-                           data = data[selectionToMatch,])
+                                     controls = k,
+                                     data = data[selectionToMatch,])
 
   data$indexResultMatch <- NA
   data$indexResultMatch[selectionToMatch] <- resultMatch

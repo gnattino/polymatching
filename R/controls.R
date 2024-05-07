@@ -1,7 +1,7 @@
 
 #' Check that type of inputs is appropriate
 #' @keywords internal
-checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose){
+checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose, vectorK){
 
   if( ! "formula" %in% class(formulaMatch) ) {
     stop("'formulaMatch' must be of class 'formula'")
@@ -21,7 +21,7 @@ checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate
 
 #' Check coherence of inputs with data
 #' @keywords internal
-checkData <- function(formulaMatch, start, data, exactMatch, checkOnePerGroup = TRUE){
+checkData <- function(formulaMatch, start, data, exactMatch, vectorK, checkOnePerGroup = TRUE){
   #browser()
 
   varsFromFormula <- all.vars(formulaMatch)
@@ -67,18 +67,18 @@ checkData <- function(formulaMatch, start, data, exactMatch, checkOnePerGroup = 
   }
 
   if(length(start) > 1) {
-    
+
     if(checkOnePerGroup == TRUE) {
-      
+
       # Check that the starting point has exactly 1 subject per group
       tabStartGroup <- table(start, data[,varGroup])
       if(!all(tabStartGroup==1)) {
         stop("The matched sets provided in 'start' must have exactly one subject per group")
       }
-      
+
     }
 
-    
+
     #Check that all the subjects in the smallest group(s) are matched
     smallestGroups <- names(tabGroup)[tabGroup==min(tabGroup)]
     if( sum(is.na(start[data[,varGroup] %in% smallestGroups]))>0) {

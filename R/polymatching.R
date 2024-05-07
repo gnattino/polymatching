@@ -3,7 +3,7 @@
 #' The package implements the conditionally optimal matching algorithm, which can be used to generate
 #' matched samples in designs with multiple treatment groups.
 #'
-#' Currently, the algorithm can be applied to datasets with 3, 4, 5 and 6 groups and generates
+#' Currently, the algorithm can be applied to datasets with up to 10 groups and generates
 #' matched samples with one subject per group. The package provides functions to generate the matched
 #' sample and to evaluate the balance in key covariates.
 #'

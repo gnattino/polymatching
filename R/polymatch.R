@@ -1,6 +1,6 @@
 #' Polymatching
 #'
-#' \code{polymatch} generates matched samples in designs with 3, 4, 5 and 6 groups.
+#' \code{polymatch} generates matched samples in designs with up to 10 groups.
 #'
 #' @param formulaMatch Formula with form \code{group ~ x_1 + ... + x_p}, where \code{group} is the name of the variable
 #' identifying the treatment groups/exposures and \code{x_1},...,\code{x_p} are the matching variables.
@@ -134,25 +134,26 @@
 #' dat$match_id_cov2 <- resultCov2$match_id
 #'
 #' @export
-polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE) {
+polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, vectorK = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE) {
 
-  #Debug/devel:
-  #------------
-  # source("C:/Users/natt03/Documents/R/temp.R")
-  # formulaMatch <- (groupF~variable)
-  # data <- generateData(c(30,10,40,20))
+  # #Debug/devel:
+  # #------------
+  # source("develFunction_generateData.R")
+  # formulaMatch <- (group~variable)
+  # data <- generateData(c(50,10,150,15,12,50,150))
   # distance = "euclidean"
   # start = "small.to.large"
   # iterate = TRUE
   # niter_max = 50
   # verbose = TRUE
+  # exactMatch = NULL
+  # vectorK = c('1' = 2, '2' = 1, '3' = 4, '4' = 1, '5' = 1, '6' = 2, '7' = 4)
 
-  #browser()
   #Check types of inputs
-  checkInputs(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose)
+  checkInputs(formulaMatch, start, data, distance, exactMatch, iterate, niter_max, verbose, vectorK)
 
   #Check coherence of data
-  resultCheckData <- checkData(formulaMatch, start, data, exactMatch)
+  resultCheckData <- checkData(formulaMatch, start, data, exactMatch, vectorK)
   varGroup <- resultCheckData$varGroup
   varsMatch <- resultCheckData$varsMatch
   vectorSchemeStart <- resultCheckData$vectorSchemeStart
@@ -236,7 +237,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                     varGroup = varGroup,
                                     distance = distance,
                                     Sigma = Sigma,
-                                    varsExactMatch = varsExactMatch)
+                                    varsExactMatch = varsExactMatch,
+                                    k = as.numeric(vectorK[vectorSchemeStart[i]]))
 
       #Erase ids of previous matching step
       dataStep$indexMatch1 <- dataStep$indexMatch2 <- NULL
@@ -296,7 +298,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                       varGroup = varGroup,
                                       distance = distance,
                                       Sigma = Sigma,
-                                      varsExactMatch = varsExactMatch)
+                                      varsExactMatch = varsExactMatch,
+                                      k = as.numeric(vectorK[groupStepIter2]))
 
         if(resultIter$total_distance < best_total_distance) {
 
