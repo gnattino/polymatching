@@ -4,34 +4,7 @@ library(polymatching)
 # Function to generate data to polymatch #
 ##########################################
 
-generateData <- function(nVect, par = NULL) {
-
-  nGroups <- length(nVect)
-
-  #If null: all data generated from N(0,1)
-  if(is.null(par)) {
-    par <- list()
-    par$means <- rep(0,nGroups)
-    par$sds <- rep(1,nGroups)
-  }
-
-
-  result <- data.frame(group = unlist(mapply(1:length(nVect),
-                                             each = nVect,
-                                             FUN = rep, SIMPLIFY = F)),
-                       variable = NA)
-
-  for(group in 1:nGroups) {
-
-    result[result$group %in% group, "variable"] <- rnorm(nVect[group],
-                                                         mean = par$means[group],
-                                                         sd = par$sd[group])
-
-  }
-
-  return(result)
-
-}
+source("develFunction_generateData.R")
 
 #########
 # Check #
@@ -562,3 +535,60 @@ grid.arrange(plotPs[[1]] +
              plotCov[[1]] +
                labs(title="Stand. Differences - Matching on Covariates"),
              ncol = 2)
+
+# Check matching with multiple subjects in some groups
+#-----------------------------------------------------
+
+set.seed(123456)
+dat <- generateData(c(20,13,150,15,12,50,150))
+
+result <- polymatch(formulaMatch = group ~ variable,
+                    data = dat,
+                    distance = "euclidean",
+                    start = "small.to.large",
+                    iterate = T,
+                    niter_max = 50,
+                    vectorK = c('2' = 1,
+                                '1' = 1,
+                                '5' = 1,
+                                '3' = 4,
+                                '4' = 1,
+                                '6' = 2,
+                                '7' = 4),
+                    verbose = T)
+
+dat$match_id <- result$match_id
+table(dat$match_id,
+      dat$group, exclude = NULL)
+
+
+result <- polymatch(formulaMatch = group ~ variable,
+                    data = dat,
+                    distance = "euclidean",
+                    start = "small.to.large",
+                    iterate = T,
+                    niter_max = 50,
+                    verbose = T)
+
+dat$group <- factor(dat$group,
+                    levels = 1:7,
+                    labels = c("A","B","C","D","E","F","G"))
+
+result <- polymatch(formulaMatch = group ~ variable,
+                    data = dat,
+                    distance = "euclidean",
+                    start = "small.to.large",
+                    iterate = T,
+                    niter_max = 50,
+                    vectorK = c('A' = 1,
+                                'B' = 1,
+                                'C' = 3,
+                                'D' = 1,
+                                'E' = 1,
+                                'F' = 2,
+                                'G' = 4),
+                    verbose = T)
+
+dat$match_id <- result$match_id
+table(dat$match_id,
+      dat$group, exclude = NULL)

@@ -158,6 +158,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   varsMatch <- resultCheckData$varsMatch
   vectorSchemeStart <- resultCheckData$vectorSchemeStart
   varsExactMatch <- resultCheckData$varsExactMatch
+  vectorK <- resultCheckData$vectorK
 
   #Select variables of interest
   data <- data[,c(varGroup,varsMatch,varsExactMatch)]

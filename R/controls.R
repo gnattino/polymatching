@@ -17,6 +17,16 @@ checkInputs <- function(formulaMatch, start, data, distance, exactMatch, iterate
     stop("'start' must be either a character string or a vector of length nrow(data)")
   }
 
+  if( !is.null(vectorK)) {
+    if(is.null(names(vectorK))) {
+      stop("'vectorK' must be a named vector with the names being the groups' labels")
+    }
+    if(all(vectorK!=1)) {
+      stop("At least one element in 'vectorK' must be 1")
+    }
+  }
+
+
 }
 
 #' Check coherence of inputs with data
@@ -116,8 +126,33 @@ checkData <- function(formulaMatch, start, data, exactMatch, vectorK, checkOnePe
     varsExactMatch <- NULL
   }
 
+  if(!is.null(vectorK)) {
+
+    if(!all(sort(names(tabGroup)) == sort(names(vectorK)))) {
+
+      stop("The names of 'vectorK' must match the names of the groups in the data")
+
+    }
+
+    if(any(tabGroup/min(tabGroup) < vectorK[names(tabGroup)])) {
+
+      stop("In the following groups, there are not enough subjects to attain the specified matching ratio: ",
+           paste(names(tabGroup)[tabGroup/min(tabGroup) < vectorK[names(tabGroup)]],
+                 collapse = ", ")
+           )
+
+    }
+
+  } else {
+
+    vectorK <- rep(1, length(tabGroup))
+    names(vectorK) <- names(tabGroup)
+
+  }
+
   return(list(varGroup = varGroup,
               varsMatch = varsMatch,
               vectorSchemeStart = vectorSchemeStart,
-              varsExactMatch = varsExactMatch))
+              varsExactMatch = varsExactMatch,
+              vectorK = vectorK))
 }
