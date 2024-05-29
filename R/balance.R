@@ -79,19 +79,20 @@ balance <- function(formulaBalance, match_id, data, weights_before = NULL, weigh
   #browser()
   #Debug/devel:
   #------------
-  # formulaBalance <- (group~variable+var1)
+  # formulaBalance <- (group~var1)
   # data <- dat
   # match_id = result$match_id
 
   #Check types of inputs (same function used for polymatch - amend with useless arguments)
   checkInputs(formulaMatch = formulaBalance, start = match_id, data = data,
-              distance = "euclidean", exactMatch = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE)
+              distance = "euclidean", exactMatch = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE, vectorK = NULL)
 
   #Check coherence of data (as above)
   resultCheckData <- checkData(formulaMatch = formulaBalance, start = match_id,
-                               data = data, exactMatch = NULL, checkOnePerGroup = FALSE)
+                               data = data, exactMatch = NULL, vectorK = NULL, checkOnePerGroup = FALSE)
   varGroup <- resultCheckData$varGroup
   varsBalance <- resultCheckData$varsMatch
+  vectorK <- resultCheckData$vectorK
 
   #Add weights to the dataset
   #Before matching
@@ -105,7 +106,7 @@ balance <- function(formulaBalance, match_id, data, weights_before = NULL, weigh
   if (!is.null(weights_after)) {
     data$weights_after <- weights_after
   } else {
-    data$weights_after <- rep(1, nrow(data))
+    data$weights_after <- as.vector(1/vectorK)[match(data[,varGroup], names(vectorK))]
   }
   varWeightsAfter <- "weights_after"
 

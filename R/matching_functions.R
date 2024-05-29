@@ -15,21 +15,31 @@ pairwiseDistance <- function(A, B, distance, Sigma) {
 
 #'Given a set of units, compute all the pairwise distances.
 #' @keywords internal
-computePairwiseDistances <- function(dataPolygon,  distance, Sigma) {
+computePairwiseDistances <- function(data,  distance, Sigma, varGroup, varsMatch, dat_stdzDistances) {
 
-  dataPolygon <- as.matrix(dataPolygon)
+  groups <- dplyr::pull(data, varGroup)
+  
+  dataPolygon <- as.matrix(data[, varsMatch])
 
   pairGroups <- utils::combn(1:nrow(dataPolygon), 2)
 
   sumPairwDist <- 0
 
   for(indexPair in 1:ncol(pairGroups)) {
+    
     pairGroupsTemp <- pairGroups[,indexPair]
+    
+    sortedGroups <- sort(c(groups[pairGroupsTemp[1]], groups[pairGroupsTemp[2]]))
+    
+    factor_stdzDistances <- dat_stdzDistances$factor[ dat_stdzDistances$group_1 == sortedGroups[1] &
+                                                        dat_stdzDistances$group_2 == sortedGroups[2] ]
+    
+    
     sumPairwDist <- (sumPairwDist +
                      pairwiseDistance(dataPolygon[pairGroupsTemp[1],],
                                       dataPolygon[pairGroupsTemp[2],],
                                       distance = distance,
-                                      Sigma = Sigma))
+                                      Sigma = Sigma)/factor_stdzDistances)
   }
 
   return(sumPairwDist)
@@ -37,13 +47,16 @@ computePairwiseDistances <- function(dataPolygon,  distance, Sigma) {
 
 #' Compute total distance of a matched sample
 #' @keywords internal
-evaluateMatching <- function(data, varIndexMatch, varsMatch, distance, Sigma) {
+evaluateMatching <- function(data, varIndexMatch, varGroup, varsMatch, distance, Sigma, dat_stdzDistances) {
 
-  withinMatchDistances <- by(data[,varsMatch],
+  withinMatchDistances <- by(data[,c(varGroup, varsMatch)],
                              INDICES = data[,varIndexMatch],
                              FUN = computePairwiseDistances,
                              distance = distance,
-                             Sigma = Sigma)
+                             Sigma = Sigma,
+                             varGroup = varGroup,
+                             varsMatch = varsMatch,
+                             dat_stdzDistances = dat_stdzDistances)
 
   dfTempToExport <- data.frame(indexMatch = names(withinMatchDistances),
                                distance = as.vector(withinMatchDistances),
@@ -66,7 +79,8 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
                             varsMatch, varGroup,
                             distance, Sigma,
                             varsExactMatch,
-                            k) {
+                            k,
+                            dat_stdzDistances) {
 
 
   #Local function for conditional matching:
@@ -82,37 +96,37 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     dataAll <- get("dataAll",envir = envExternalFun)
     Sigma <- get("Sigma",envir = envExternalFun)
     distance <- get("distance",envir = envExternalFun)
-    varGroup <- get("varGroup",envir = envExternalFun)
     varIndexMatch1 <- get("varIndexMatch1",envir = envExternalFun)
     varIndexMatch2 <- get("varIndexMatch2",envir = envExternalFun)
     groups1 <- get("groups1",envir = envExternalFun)
     groups2 <- get("groups2",envir = envExternalFun)
+    dat_stdzDistances <- get("dat_stdzDistances",envir = envExternalFun)
 
     #Generate indexDf is a matrix with all the treated-control pairs as rows.
     indexDf <- as.data.frame(index, stringsAsFactors = F)
-    groupTreated <- unique(data[z,varGroup])
-    groupControls <- unique(data[!z,varGroup])
+    groupTreated <- unique(data$groupNewFunction[z])
+    groupControls <- unique(data$groupNewFunction[!z])
     names(indexDf) <- paste("group",c(groupTreated,groupControls), sep ="")
 
     #Wide format for:
 
     # - group 1
-    longIndexGroup1 <- dataAll[!is.na(dataAll[,varIndexMatch1]), c(varGroup, varIndexMatch1)]
+    longIndexGroup1 <- dataAll[!is.na(dataAll[,varIndexMatch1]), c("groupNewFunction", varIndexMatch1)]
     longIndexGroup1$value <- row.names(longIndexGroup1)
     wideIndexGroup1 <- stats::reshape(longIndexGroup1,
                                direction = "wide",
                                idvar = varIndexMatch1,
-                               timevar = varGroup)
+                               timevar = "groupNewFunction")
     wideIndexGroup1[,varIndexMatch1] <- NULL
     names(wideIndexGroup1) <- gsub("value.","group",names(wideIndexGroup1))
 
     # - group 2
-    longIndexGroup2 <- dataAll[!is.na(dataAll[,varIndexMatch2]), c(varGroup, varIndexMatch2)]
+    longIndexGroup2 <- dataAll[!is.na(dataAll[,varIndexMatch2]), c("groupNewFunction", varIndexMatch2)]
     longIndexGroup2$value <- row.names(longIndexGroup2)
     wideIndexGroup2 <- stats::reshape(longIndexGroup2,
                                direction = "wide",
                                idvar = varIndexMatch2,
-                               timevar = varGroup)
+                               timevar = "groupNewFunction")
     wideIndexGroup2[,varIndexMatch2] <- NULL
     names(wideIndexGroup2) <- gsub("value.","group",names(wideIndexGroup2))
 
@@ -162,15 +176,20 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     for(indexPair in 1:ncol(pairGroups)) {
 
       pairGroupsTemp <- pairGroups[,indexPair]
-
+      
+      #Original name of groups
+      originalNamesGroupsTemp <- sort(gsub("\\.[^.]*$", "", pairGroupsTemp))
+      factor_stdzDistances <- dat_stdzDistances$factor[ dat_stdzDistances$group_1 == originalNamesGroupsTemp[1] &
+                                                          dat_stdzDistances$group_2 == originalNamesGroupsTemp[2] ]
+      
       matrixTemp <- as.matrix((indexDf[,paste("group",pairGroupsTemp[1],"_",varsMatch,sep="")] -
                                  indexDf[,paste("group",pairGroupsTemp[2],"_",varsMatch,sep="")]))
 
       if(distance == "euclidean") {
-        distances <- (distances + sqrt(rowSums(matrixTemp^2)))
+        distances <- (distances + sqrt(rowSums(matrixTemp^2))/factor_stdzDistances)
       }
       if(distance == "mahalanobis") {
-        distances <- (distances + sqrt(rowSums((matrixTemp %*% SigmaInv) * matrixTemp)))
+        distances <- (distances + sqrt(rowSums((matrixTemp %*% SigmaInv) * matrixTemp))/factor_stdzDistances)
       }
 
     }
@@ -192,29 +211,28 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
     dplyr::mutate(id_rep_group_2 = dplyr::row_number()) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
-      varGroupNew = dplyr::case_when(
+      groupNewFunction = dplyr::case_when(
         !is.na(!!as.symbol(varIndexMatch1)) ~ paste0(!!as.symbol(varGroup), ".", id_rep_group_1),
         !is.na(!!as.symbol(varIndexMatch2)) ~ paste0(!!as.symbol(varGroup), ".", id_rep_group_2)
       )
       ) %>%
     as.data.frame()
-  data[,varGroup] <- data$varGroupNew
-  data$varGroupNew <- NULL
+  
   data$id_rep_group_1 <- NULL
   data$id_rep_group_2 <- NULL
-
-  groups1 <- sort(unique(data[!is.na(data[,varIndexMatch1]), varGroup]))
-  groups2 <- sort(unique(data[!is.na(data[,varIndexMatch2]), varGroup]))
+  
+  groups1 <- sort(unique(data$groupNewFunction[!is.na(data[,varIndexMatch1])]))
+  groups2 <- sort(unique(data$groupNewFunction[!is.na(data[,varIndexMatch2])]))
 
   #In the selection, selecting groups1[1] and groups2[1] is arbitrary.
   #However, the same choice made here must be reported also into the function applyPersonalDistance
-  selectionToMatch <- ( (data[,varGroup] %in% groups1[1] & !is.na(data[,varIndexMatch1])) |
-                          (data[,varGroup] %in% groups2[1] & !is.na(data[,varIndexMatch2])) )
+  selectionToMatch <- ( (data$groupNewFunction %in% groups1[1] & !is.na(data[,varIndexMatch1])) |
+                          (data$groupNewFunction %in% groups2[1] & !is.na(data[,varIndexMatch2])) )
 
   #Generate new variable that define the "bipartite" groups
   data$groupNew <- NA
-  data$groupNew[data[,varGroup] %in% groups1] <- paste(groups1, collapse = "")
-  data$groupNew[data[,varGroup] %in% groups2] <- paste(groups2, collapse = "")
+  data$groupNew[data$groupNewFunction %in% groups1] <- paste(groups1, collapse = "")
+  data$groupNew[data$groupNewFunction %in% groups2] <- paste(groups2, collapse = "")
   data$groupNew <- factor(data$groupNew,
                           levels = c(paste(groups1, collapse = ""),
                                      paste(groups2, collapse = "")))
@@ -281,10 +299,58 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
   resultEvaluation <- evaluateMatching(data,
                                        varIndexMatch = "indexMatch",
+                                       varGroup = varGroup,
                                        varsMatch = varsMatch,
                                        distance = distance,
-                                       Sigma = Sigma)
+                                       Sigma = Sigma,
+                                       dat_stdzDistances = dat_stdzDistances)
 
   return(list(total_distance = resultEvaluation$total_distance,
               match_id = data$indexMatch))
+}
+
+#'Compute factor to standardize distances when matching multiple subjects in one group
+#' @keywords internal
+stdzDistances <- function(vectorK) {
+  
+  groups <- names(vectorK)
+  dat_stdzDistances <- NULL
+  
+  #Distances between groups
+  #-------------------------
+  pairs_groups <- utils::combn(groups, 2)
+  
+  for(j in 1:ncol(pairs_groups)) {
+    
+    sorted_groups <- sort(pairs_groups[,j])
+    
+    dat_stdzDistances_iter <- data.frame(
+      group_1 = sorted_groups[1],
+      group_2 = sorted_groups[2],
+      factor = as.numeric(vectorK[sorted_groups[1]]) * as.numeric(vectorK[sorted_groups[2]]),
+      stringsAsFactors = FALSE
+      )
+    
+    dat_stdzDistances <- rbind(dat_stdzDistances,
+                               dat_stdzDistances_iter)
+    
+  }
+  
+  #Distances within groups
+  #------------------------
+  for(i in 1:length(groups)) {
+    
+    dat_stdzDistances_iter <- data.frame(
+      group_1 = groups[i],
+      group_2 = groups[i],
+      factor = choose(as.numeric(vectorK[groups[i]]), 2),
+      stringsAsFactors = FALSE
+    )
+    
+    dat_stdzDistances <- rbind(dat_stdzDistances,
+                               dat_stdzDistances_iter)
+    
+  }
+  
+  return(dat_stdzDistances)
 }

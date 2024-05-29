@@ -168,6 +168,14 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
 
   #Number of groups
   numGroups <- length(table(data[,varGroup]))
+  
+  #Factors to standardize between-group distances (if matching 1:K in any group)
+  #For example: if matching groups A-B-C with ratios 1:1:K, 
+  # there are K distances between A and C and only 1 distance between A and B,
+  # so when computing the total distance, the distance between A and B would
+  # end up being less important. So, we divide each distance between two groups by the 
+  # number of possible distances between those two groups. 
+  dat_stdzDistances <- stdzDistances(vectorK)
 
   #Define an id to sort observations in order provided
   data$idUnits <- 1:nrow(data)
@@ -239,7 +247,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                     distance = distance,
                                     Sigma = Sigma,
                                     varsExactMatch = varsExactMatch,
-                                    k = as.numeric(vectorK[vectorSchemeStart[i]]))
+                                    k = as.numeric(vectorK[vectorSchemeStart[i]]),
+                                    dat_stdzDistances = dat_stdzDistances)
 
       #Erase ids of previous matching step
       dataStep$indexMatch1 <- dataStep$indexMatch2 <- NULL
@@ -300,7 +309,8 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
                                       distance = distance,
                                       Sigma = Sigma,
                                       varsExactMatch = varsExactMatch,
-                                      k = as.numeric(vectorK[groupStepIter2]))
+                                      k = as.numeric(vectorK[groupStepIter2]),
+                                      dat_stdzDistances = dat_stdzDistances)
 
         if(resultIter$total_distance < best_total_distance) {
 

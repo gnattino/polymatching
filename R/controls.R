@@ -77,25 +77,68 @@ checkData <- function(formulaMatch, start, data, exactMatch, vectorK, checkOnePe
   }
 
   if(length(start) > 1) {
+    
+    tabStartGroup <- table(start, data[,varGroup])
 
     if(checkOnePerGroup == TRUE) {
 
       # Check that the starting point has exactly 1 subject per group
-      tabStartGroup <- table(start, data[,varGroup])
       if(!all(tabStartGroup==1)) {
         stop("The matched sets provided in 'start' must have exactly one subject per group")
       }
 
     }
 
-
     #Check that all the subjects in the smallest group(s) are matched
     smallestGroups <- names(tabGroup)[tabGroup==min(tabGroup)]
     if( sum(is.na(start[data[,varGroup] %in% smallestGroups]))>0) {
       warning("In the matched sample provided, some units of the smallest group(s) are NOT matched")
     }
+    
+    if(!is.null(vectorK)) {
+      warning("Because a matched sample is provided as input, the parameter vectorK is disregarded.")
+    }
+    
+    #Define vectorK based on the starting matched sample
+    minSubjectsPerMatchedSet <- apply(tabStartGroup, 2, min, na.rm = TRUE)
+    maxSubjectsPerMatchedSet <- apply(tabStartGroup, 2, max, na.rm = TRUE)
+    
+    if(all(minSubjectsPerMatchedSet != maxSubjectsPerMatchedSet)) {
+      
+      stop("The number of units from each treatment group is not the same for all matched set")
+      
+    } else {
+      
+      vectorK <- minSubjectsPerMatchedSet
+    }
 
-
+  } else {
+    
+    
+    if(!is.null(vectorK)) {
+      
+      if(!all(sort(names(tabGroup)) == sort(names(vectorK)))) {
+        
+        stop("The names of 'vectorK' must match the names of the groups in the data")
+        
+      }
+      
+      if(any(tabGroup/min(tabGroup) < vectorK[names(tabGroup)])) {
+        
+        stop("In the following groups, there are not enough subjects to attain the specified matching ratio: ",
+             paste(names(tabGroup)[tabGroup/min(tabGroup) < vectorK[names(tabGroup)]],
+                   collapse = ", ")
+        )
+        
+      }
+      
+    } else {
+      
+        vectorK <- rep(1, length(tabGroup))
+        names(vectorK) <- names(tabGroup)
+        
+    }
+    
   }
 
   if(!is.null(exactMatch)) {
@@ -120,35 +163,11 @@ checkData <- function(formulaMatch, start, data, exactMatch, vectorK, checkOnePe
 
     }
 
-
-
   } else {
     varsExactMatch <- NULL
   }
 
-  if(!is.null(vectorK)) {
-
-    if(!all(sort(names(tabGroup)) == sort(names(vectorK)))) {
-
-      stop("The names of 'vectorK' must match the names of the groups in the data")
-
-    }
-
-    if(any(tabGroup/min(tabGroup) < vectorK[names(tabGroup)])) {
-
-      stop("In the following groups, there are not enough subjects to attain the specified matching ratio: ",
-           paste(names(tabGroup)[tabGroup/min(tabGroup) < vectorK[names(tabGroup)]],
-                 collapse = ", ")
-           )
-
-    }
-
-  } else {
-
-    vectorK <- rep(1, length(tabGroup))
-    names(vectorK) <- names(tabGroup)
-
-  }
+  
 
   return(list(varGroup = varGroup,
               varsMatch = varsMatch,
