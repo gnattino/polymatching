@@ -22,8 +22,18 @@
 #' @param exactMatch Formula with form \code{~ z_1 + ... + z_k}, where \code{z_1},...,\code{z_k} must
 #' be factor variables. Subjects are exactly matched on \code{z_1},...,\code{z_k}, i.e., matched
 #' within levels of these variables.
+#' @param vectorK A named vector with the number of subjects from each group in each matched set. The names of the vector must be 
+#' the labels of the groups, i.e., the levels of the variable identifying the treatment groups/exposures. 
+#' For example, in case of four groups with labels "A","B","C" and "D" and assuming that the desired design is 1:2:3:3 
+#' (1 subject from A, 2 from B, 3 from C and 3 from D in each matched set), the parameter should be set to
+#' \code{vectorK =  c("A" = 1, "B" = 2, "C" = 3, "D" = 3)}. By default, the generated matched design includes 1 subject per group in each
+#' matched set, i.e, a 1:1: ... :1 matched design.
 #' @param iterate Boolean specifying whether iterations should be done (\code{iterate=TRUE}, default) or not (\code{iterate=FALSE}).
 #' @param niter_max Maximum number of iterations. Default is 50.
+#' @param withinGroupDist Boolean specifying whether the distances within the same treatment/exposure group should be considered in the 
+#' total distance. For example, in a 1:2:3 matched design among the groups A, B and C, the parameters controls whether the distance 
+#' between the two subjects in B and the three pairwise distances among the subjects in C should be counted in the total distance. 
+#' The default value is \code{TRUE}.
 #' @param verbose Boolean: should text be printed in the console? Default is \code{TRUE}.
 
 #' @return A list containing the following components:
@@ -35,10 +45,12 @@
 #'
 #' @details The function implements the conditionally optimal matching algorithm, which iteratively uses
 #' two-group optimal matching steps to generate matched samples with small total distance. In the current implementation,
-#' it is possible to generate matched samples with only one subject per group.
+#' it is possible to generate matched samples with multiple subjects per group, with the matching ratio being 
+#' specified by the \code{vectorK} parameter.
 #'
 #' The steps of the algorithm are described with the following example. Consider a 4-group design with
-#' groups labels "A", "B", "C" and "D". The algorithm requires a set of quadruplets as starting point. The argument \code{start} defines the approach to be used to
+#' groups labels "A", "B", "C" and "D" and a 1:1:1:1 matching ratio. The algorithm requires a set of quadruplets as starting point. 
+#' The argument \code{start} defines the approach to be used to
 #' generate such a starting point. \code{polymatch} generates the starting point by sequentially using optimal two-group matching.
 #' In the default setting (\code{start="small.to.large"}), the steps are:
 #' \enumerate{
@@ -134,7 +146,7 @@
 #' dat$match_id_cov2 <- resultCov2$match_id
 #'
 #' @export
-polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, vectorK = NULL, iterate = TRUE, niter_max = 50, verbose = TRUE) {
+polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "euclidean", exactMatch = NULL, vectorK = NULL, iterate = TRUE, niter_max = 50, withinGroupDist = TRUE, verbose = TRUE) {
 
   # #Debug/devel:
   # #------------
@@ -175,7 +187,7 @@ polymatch <- function(formulaMatch, start = "small.to.large", data, distance = "
   # so when computing the total distance, the distance between A and B would
   # end up being less important. So, we divide each distance between two groups by the 
   # number of possible distances between those two groups. 
-  dat_stdzDistances <- stdzDistances(vectorK)
+  dat_stdzDistances <- stdzDistances(vectorK, withinGroupDist)
 
   #Define an id to sort observations in order provided
   data$idUnits <- 1:nrow(data)

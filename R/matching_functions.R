@@ -311,7 +311,7 @@ condOptMatching <- function(data, varIndexMatch1, varIndexMatch2,
 
 #'Compute factor to standardize distances when matching multiple subjects in one group
 #' @keywords internal
-stdzDistances <- function(vectorK) {
+stdzDistances <- function(vectorK, withinGroupDist) {
   
   groups <- names(vectorK)
   dat_stdzDistances <- NULL
@@ -343,7 +343,9 @@ stdzDistances <- function(vectorK) {
     dat_stdzDistances_iter <- data.frame(
       group_1 = groups[i],
       group_2 = groups[i],
-      factor = choose(as.numeric(vectorK[groups[i]]), 2),
+      factor = ifelse(withinGroupDist, 
+                      choose(as.numeric(vectorK[groups[i]]), 2),
+                      Inf),
       stringsAsFactors = FALSE
     )
     
