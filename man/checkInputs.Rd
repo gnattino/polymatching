@@ -12,7 +12,8 @@ checkInputs(
   exactMatch,
   iterate,
   niter_max,
-  verbose
+  verbose,
+  vectorK
 )
 }
 \description{

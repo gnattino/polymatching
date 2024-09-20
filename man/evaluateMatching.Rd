@@ -4,7 +4,15 @@
 \alias{evaluateMatching}
 \title{Compute total distance of a matched sample}
 \usage{
-evaluateMatching(data, varIndexMatch, varsMatch, distance, Sigma)
+evaluateMatching(
+  data,
+  varIndexMatch,
+  varGroup,
+  varsMatch,
+  distance,
+  Sigma,
+  dat_stdzDistances
+)
 }
 \description{
 Compute total distance of a matched sample

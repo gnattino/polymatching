@@ -4,7 +4,14 @@
 \alias{checkData}
 \title{Check coherence of inputs with data}
 \usage{
-checkData(formulaMatch, start, data, exactMatch, checkOnePerGroup = TRUE)
+checkData(
+  formulaMatch,
+  start,
+  data,
+  exactMatch,
+  vectorK,
+  checkOnePerGroup = TRUE
+)
 }
 \description{
 Check coherence of inputs with data

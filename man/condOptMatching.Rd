@@ -12,7 +12,9 @@ condOptMatching(
   varGroup,
   distance,
   Sigma,
-  varsExactMatch
+  varsExactMatch,
+  k,
+  dat_stdzDistances
 )
 }
 \description{

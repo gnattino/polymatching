@@ -4,7 +4,14 @@
 \alias{computePairwiseDistances}
 \title{Given a set of units, compute all the pairwise distances.}
 \usage{
-computePairwiseDistances(dataPolygon, distance, Sigma)
+computePairwiseDistances(
+  data,
+  distance,
+  Sigma,
+  varGroup,
+  varsMatch,
+  dat_stdzDistances
+)
 }
 \description{
 Given a set of units, compute all the pairwise distances.
