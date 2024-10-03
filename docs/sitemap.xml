@@ -1,0 +1,27 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/background.html</loc></url>
+<url><loc>/articles/balance.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/polymatching.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/balance.html</loc></url>
+<url><loc>/reference/balanceBinVar.html</loc></url>
+<url><loc>/reference/balanceCatVar.html</loc></url>
+<url><loc>/reference/balanceContVar.html</loc></url>
+<url><loc>/reference/checkData.html</loc></url>
+<url><loc>/reference/checkInputs.html</loc></url>
+<url><loc>/reference/computePairwiseDistances.html</loc></url>
+<url><loc>/reference/condOptMatching.html</loc></url>
+<url><loc>/reference/evaluateMatching.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/pairwiseDistance.html</loc></url>
+<url><loc>/reference/plotBalance.html</loc></url>
+<url><loc>/reference/polymatch.html</loc></url>
+<url><loc>/reference/polymatching.html</loc></url>
+<url><loc>/reference/stdzDistances.html</loc></url>
+<url><loc>/reference/typeVariable.html</loc></url>
+<url><loc>/reference/weighted.variance.html</loc></url>
+</urlset>
+

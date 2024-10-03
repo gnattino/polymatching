@@ -1,0 +1,8 @@
+pandoc: '3.2'
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  background: background.html
+  balance: balance.html
+  polymatching: polymatching.html
+last_built: 2024-10-03T20:21Z

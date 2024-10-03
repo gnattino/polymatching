@@ -1,0 +1,24 @@
+title: Polymatching
+home:
+  sidebar:
+    structure: [authors, citation]
+template:
+  bootstrap: 5
+  bootswatch: cerulean
+navbar:
+    left:
+      - icon: fa-home
+        href: index.html
+      - text: "Background"
+        href: articles/background.html
+      - text: "Polymatching"
+        href: articles/polymatching.html
+      - text: "Balance"
+        href: articles/balance.html
+    right:
+      - icon: fa-file-code-o
+        text: "Functions"
+        href: reference/index.html
+      - icon: fa-github fa-lg
+        text: "Github"
+        href: https://github.com/gnattino/polymatching
