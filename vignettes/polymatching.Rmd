@@ -3,10 +3,163 @@ title: "Polymatching"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, echo = FALSE, warning = FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE)
 ```
 
-## Getting started 
+## A toy dataset
 
-Text
+To show the functionalities of the `polymatching` package, let's start by generating a toy dataset with 3 continuous variables ($X_1$, $X_2$ and $X_3$), one binary variable ($Z$) and one categorical variable ($W$), with four levels. The units are divided in 4 groups, labeled as A, B, C and D, with different size ($n_A = 10$, $n_B = 100$, $n_C = n_D = 500$). Let $G$ be the name of the variable identifying the assigned group.
+
+```{r}
+#Set seed for reproducibility of results
+set.seed(123)
+
+#Group sizes
+n_A <- 10
+n_B <- 100
+n_C <- n_D <- 200
+
+#Generate variables separately for each group
+dat_A <- data.frame(X_1 = rnorm(n_A, mean = 0,  sd = 1), 
+                    X_2 = rnorm(n_A, mean = 5,  sd = 1), 
+                    X_3 = rnorm(n_A, mean = -5,  sd = 1), 
+                    Z = factor(rbinom(n_A, size = 1, prob = .5)),
+                    W = factor(apply(rmultinom(n_A, size = 1, prob = c(.25, .25, .25, .25)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                    G = "A",
+                    stringsAsFactors = FALSE)
+
+dat_B <- data.frame(X_1 = rnorm(n_B, mean = 0,  sd = 1), 
+                   X_2 = rnorm(n_B, mean = 5,  sd = 1), 
+                   X_3 = rnorm(n_B, mean = -5,  sd = 1), 
+                   Z = factor(rbinom(n_B, size = 1, prob = .5)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.25, .25, .25, .25)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "B",
+                   stringsAsFactors = FALSE)
+
+dat_C <- data.frame(X_1 = rnorm(n_C, mean = -0.5,  sd = 1), 
+                   X_2 = rnorm(n_C, mean = 4.5,  sd = 1), 
+                   X_3 = rnorm(n_C, mean = -4.5,  sd = 1), 
+                   Z = factor(rbinom(n_C, size = 1, prob = .2)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.1, .2, .3, .4)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "C",
+                   stringsAsFactors = FALSE)
+
+dat_D <- data.frame(X_1 = rnorm(n_D, mean = 0.5,  sd = 1), 
+                   X_2 = rnorm(n_D, mean = 5.5,  sd = 1), 
+                   X_3 = rnorm(n_D, mean = -5.5,  sd = 1), 
+                   Z = factor(rbinom(n_D, size = 1, prob = .8)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.4, .3, .2, .1)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "D",
+                   stringsAsFactors = FALSE)
+
+dat <- rbind(dat_A, dat_B, dat_C, dat_D)
+```
+
+The following plot shows the distribution of the continuous variables.
+
+```{r}
+library(ggplot2)
+library(tidyr)
+
+dat %>%
+  pivot_longer(cols = c("X_1", "X_2", "X_3"), 
+               names_to = "variable", 
+               values_to = "value") %>%
+  ggplot() + 
+  geom_density(aes(x = value, group = G, color = G, after_stat(count))) +
+  facet_grid(cols = vars(variable), scales = "free") +
+  labs(x = element_blank(), y = element_blank(), color = "Group")
+```
+
+The distribution of the binary and categorical variables is represented below. The two figures show a good overlap in all of the variables. 
+
+```{r}
+dat %>%
+  pivot_longer(cols = c("Z", "W"), 
+               names_to = "variable", 
+               values_to = "value") %>%
+  ggplot() + 
+  geom_bar(aes(x = G, fill = value)) +
+  facet_grid(cols = vars(variable), scales = "free") +
+  labs(x = "Group", y = "N", fill = "Value")
+```
+
+## Getting started with `polymatch`
+
+The function `polymatch` can be used to generate matched sets with units that are similar with respect to the desired variables. In the simplest matched design, matched sets are made by one unit for each group. In the simulated dataset, this means creating quadruplets with one subject from each of the four groups. This is the default design of `polymatch`. The following code can be used to generate matched sets that are similar with respect to the three continuous variables $X_1$, $X_2$ and $X_3$.
+
+```{r}
+library(polymatching)
+result_match_1 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "euclidean")
+```
+
+The output shows the total distance attained at each step of the iterative process. To identify the generated sets, the IDs of the matched sets can be added to the dataset as a new variable.
+
+```{r}
+dat$match_id_1 <- result_match_1$match_id
+```
+
+We can check that each group is made of four units, one from each group. The number of matched sets is 10, as this is the size of the smallest group. 
+
+```{r}
+table(dat$match_id_1, 
+      dat$G, 
+      dnn = c("Match ID", "Group"))
+```
+
+## Unbalanced matched sets
+
+As the groups B, C and D are much larger than A, we can also match multiple subjects from B, C and D to each subject in A. This can be done with the parameter `vectorK` of the function.
+
+```{r}
+result_match_2 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "euclidean",
+                        vectorK = c("A" = 1, 
+                                    "B" = 2,
+                                    "C" = 3,
+                                    "D" = 3))
+dat$match_id_2 <- result_match_2$match_id
+```
+
+Now, each unit from A is matched to 2 units from B and to 3 units from C and D.
+
+```{r}
+table(dat$match_id_1, 
+      dat$G, 
+      dnn = c("Match ID", "Group"))
+```
+
+## Exact matching constraints
+
+It is possible to force the algorithm to match only the units that share the value of one variable (or multiple variables). This can be done with the `exactMatch` parameter. With the following code, only units with the same value in $Z$ and $W$ can be matched.
+
+```{r}
+result_match_3 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "euclidean",
+                        exactMatch = ~ Z + W)
+dat$match_id_3 <- result_match_3$match_id
+```
+
+For example, it is possible to check that all matched units share the value of $Z$. 
+
+```{r}
+table(dat$match_id_3, 
+      dat$G, 
+      dat$Z,
+      dnn = c("Match ID", "Group", "Z"))
+```

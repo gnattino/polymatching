@@ -3,10 +3,4 @@ title: "Background"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## Matching with multiple groups
-
-Text
+The polymatching design is a generalization of the commonly seen pair matching in the presence of multiple exposure groups (more than two). Polymatching requires that at least one subject from each exposure group is included in the final matched set. Consequently, the matched set resembles a shape of a polygon. For example, with three exposure groups, the matched set consists of one subject from each group, forming a triangle. Unlike pair matching design, optimal algorithm that finds the polygon matches with the smallest total distance is not available. Therefore, we propose a near optimal solution, which runs in polynomial time. It applies the optimal pair matching algorithm in an iterative manner. We can show that the total distance from our algorithm is bounded by the optimal distance multiplied by a constant factor (Nattino, Song, Lu, 2022).

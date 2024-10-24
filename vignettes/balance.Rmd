@@ -10,3 +10,37 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Balance in matched samples
 
 Text
+```{r}
+library(polymatching)
+
+#Match on continuous covariates only
+result_match_1 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "euclidean",
+                        vectorK = c("A" = 1, 
+                                    "B" = 1,
+                                    "C" = 1,
+                                    "D" = 1))
+dat$match_id_1 <- result_match_1$match_id
+
+tabBalancePs <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
+                        match_id = dat$match_id_1, 
+                        data = dat)
+plotBalance(tabBalancePs,  boxplots = FALSE)
+
+#Match on continuous covariates with exact match on categorical/binary variables
+result_match_1 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "mahalanobis",
+                        vectorK = c("A" = 1, 
+                                    "B" = 1,
+                                    "C" = 1,
+                                    "D" = 1),
+                        exactMatch = ~ Z + W)
+dat$match_id_1 <- result_match_1$match_id
+
+tabBalancePs <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
+                        match_id = dat$match_id_1, 
+                        data = dat)
+plotBalance(tabBalancePs, ratio = T, boxplots = FALSE)
+```
