@@ -3,44 +3,109 @@ title: "Balance"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, echo = FALSE, warning = FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE)
 ```
 
-## Balance in matched samples
+```{r, echo = FALSE, results = 'hide'}
+##############################################
+# Hide generation of dataset and matched set #
+##############################################
 
-Text
-```{r}
+#Set seed for reproducibility of results
+set.seed(123)
+
+#Group sizes
+n_A <- 50
+n_B <- 750
+n_C <- n_D <- 1000
+
+#Generate variables separately for each group
+dat_A <- data.frame(X_1 = rnorm(n_A, mean = 0,  sd = 1), 
+                    X_2 = rnorm(n_A, mean = 5,  sd = 1), 
+                    X_3 = rnorm(n_A, mean = -5,  sd = 1), 
+                    Z = factor(rbinom(n_A, size = 1, prob = .5)),
+                    W = factor(apply(rmultinom(n_A, size = 1, prob = c(.25, .25, .25, .25)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                    G = "A",
+                    stringsAsFactors = FALSE)
+
+dat_B <- data.frame(X_1 = rnorm(n_B, mean = 0,  sd = 1), 
+                   X_2 = rnorm(n_B, mean = 5,  sd = 1), 
+                   X_3 = rnorm(n_B, mean = -5,  sd = 1), 
+                   Z = factor(rbinom(n_B, size = 1, prob = .5)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.25, .25, .25, .25)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "B",
+                   stringsAsFactors = FALSE)
+
+dat_C <- data.frame(X_1 = rnorm(n_C, mean = -0.5,  sd = 1), 
+                   X_2 = rnorm(n_C, mean = 4.5,  sd = 1), 
+                   X_3 = rnorm(n_C, mean = -4.5,  sd = 1), 
+                   Z = factor(rbinom(n_C, size = 1, prob = .2)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.1, .2, .3, .4)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "C",
+                   stringsAsFactors = FALSE)
+
+dat_D <- data.frame(X_1 = rnorm(n_D, mean = 0.5,  sd = 1), 
+                   X_2 = rnorm(n_D, mean = 5.5,  sd = 1), 
+                   X_3 = rnorm(n_D, mean = -5.5,  sd = 1), 
+                   Z = factor(rbinom(n_D, size = 1, prob = .8)),
+                   W = factor(apply(rmultinom(n_A, size = 1, prob = c(.4, .3, .2, .1)) == 1, 
+                                     MARGIN = 2, 
+                                     FUN = which)),
+                   G = "D",
+                   stringsAsFactors = FALSE)
+
+dat <- rbind(dat_A, dat_B, dat_C, dat_D)
+
 library(polymatching)
-
-#Match on continuous covariates only
 result_match_1 <- polymatch(G ~ X_1 + X_2 + X_3, 
+                        data = dat,
+                        distance = "euclidean")
+dat$match_id_1 <- result_match_1$match_id
+
+
+result_match_3 <- polymatch(G ~ X_1 + X_2 + X_3, 
                         data = dat,
                         distance = "euclidean",
-                        vectorK = c("A" = 1, 
-                                    "B" = 1,
-                                    "C" = 1,
-                                    "D" = 1))
-dat$match_id_1 <- result_match_1$match_id
-
-tabBalancePs <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
-                        match_id = dat$match_id_1, 
-                        data = dat)
-plotBalance(tabBalancePs,  boxplots = FALSE)
-
-#Match on continuous covariates with exact match on categorical/binary variables
-result_match_1 <- polymatch(G ~ X_1 + X_2 + X_3, 
-                        data = dat,
-                        distance = "mahalanobis",
-                        vectorK = c("A" = 1, 
-                                    "B" = 1,
-                                    "C" = 1,
-                                    "D" = 1),
                         exactMatch = ~ Z + W)
-dat$match_id_1 <- result_match_1$match_id
+dat$match_id_3 <- result_match_3$match_id
 
-tabBalancePs <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
-                        match_id = dat$match_id_1, 
+```
+
+## Evaluating the balance in matched samples
+
+The package `polymatching` implements also functions to assess the balance in the variables of interest after matching. Consider the matched samples generated in the Polymatching tab. The following code can be used to  assess the balance in all of the five variables of the dataset for the first matched set. 
+
+```{r}
+tabBalance_1 <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
+                        match_id = dat$match_id_1,
                         data = dat)
-plotBalance(tabBalancePs, ratio = T, boxplots = FALSE)
+knitr::kable(tabBalance_1, digits = 3)
+```
+
+The table provides the standardized mean differences (SMDs) comparing each pair of groups, before and after matching, in terms of all of the listed variables. For continuous variables, the table also provides the ratio of the variances before and after matching. SMDs less than 10% are generally considered as negligible differences. The table above show that between-group differences have much decreased after matching for all variables that were taken into account in the matching step ($X_1$, $X_2$ and $X_3$). The balance in $Z$ and $W$, which were not taken into account to generate the first matched sample, is very poor. The same output can be shown graphically with the following code. 
+
+```{r}
+plotBalance(tabBalance_1, 
+            boxplots = FALSE,
+            ratioVariances = TRUE)
+```
+
+Notably, when considering the balance of the matched set where the variables $Z$ and $W$ were exactly matched, it is possible to observe a perfect balance in the variables $Z$ and $W$ and a worse balance in the other variables. 
+
+```{r}
+tabBalance_3 <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
+                        match_id = dat$match_id_3,
+                        data = dat)
+plotBalance(tabBalance_3, 
+            boxplots = FALSE,
+            ratioVariances = TRUE)
 ```

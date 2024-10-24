@@ -60,11 +60,240 @@
     
     
 <div class="section level2">
-<h2 id="getting-started">Getting started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
+<h2 id="a-toy-dataset">A toy dataset<a class="anchor" aria-label="anchor" href="#a-toy-dataset"></a>
 </h2>
-<p>Text</p>
+<p>To show the functionalities of the <code>polymatching</code> package,
+let’s start by generating a toy dataset with 3 continuous variables
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>1</mn></msub><annotation encoding="application/x-tex">X_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>2</mn></msub><annotation encoding="application/x-tex">X_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>3</mn></msub><annotation encoding="application/x-tex">X_3</annotation></semantics></math>),
+one binary variable
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>)
+and one categorical variable
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>),
+with four levels. The units are divided in 4 groups, labeled as A, B, C
+and D, with different size
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>A</mi></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">n_A = 10</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>B</mi></msub><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">n_B = 100</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>C</mi></msub><mo>=</mo><msub><mi>n</mi><mi>D</mi></msub><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">n_C = n_D = 500</annotation></semantics></math>).
+Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+be the name of the variable identifying the assigned group.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Set seed for reproducibility of results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#Group sizes</span></span>
+<span><span class="va">n_A</span> <span class="op">&lt;-</span> <span class="fl">50</span></span>
+<span><span class="va">n_B</span> <span class="op">&lt;-</span> <span class="fl">750</span></span>
+<span><span class="va">n_C</span> <span class="op">&lt;-</span> <span class="va">n_D</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span></span>
+<span><span class="co">#Generate variables separately for each group</span></span>
+<span><span class="va">dat_A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X_1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_A</span>, mean <span class="op">=</span> <span class="fl">0</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                    X_2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_A</span>, mean <span class="op">=</span> <span class="fl">5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                    X_3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_A</span>, mean <span class="op">=</span> <span class="op">-</span><span class="fl">5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                    Z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n_A</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                    W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="va">n_A</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.25</span>, <span class="fl">.25</span>, <span class="fl">.25</span>, <span class="fl">.25</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span>, </span>
+<span>                                     MARGIN <span class="op">=</span> <span class="fl">2</span>, </span>
+<span>                                     FUN <span class="op">=</span> <span class="va">which</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                    G <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat_B</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X_1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_B</span>, mean <span class="op">=</span> <span class="fl">0</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_B</span>, mean <span class="op">=</span> <span class="fl">5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_B</span>, mean <span class="op">=</span> <span class="op">-</span><span class="fl">5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   Z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n_B</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="va">n_A</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.25</span>, <span class="fl">.25</span>, <span class="fl">.25</span>, <span class="fl">.25</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span>, </span>
+<span>                                     MARGIN <span class="op">=</span> <span class="fl">2</span>, </span>
+<span>                                     FUN <span class="op">=</span> <span class="va">which</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   G <span class="op">=</span> <span class="st">"B"</span>,</span>
+<span>                   stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat_C</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X_1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_C</span>, mean <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_C</span>, mean <span class="op">=</span> <span class="fl">4.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_C</span>, mean <span class="op">=</span> <span class="op">-</span><span class="fl">4.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   Z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n_C</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">.2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="va">n_A</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.2</span>, <span class="fl">.3</span>, <span class="fl">.4</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span>, </span>
+<span>                                     MARGIN <span class="op">=</span> <span class="fl">2</span>, </span>
+<span>                                     FUN <span class="op">=</span> <span class="va">which</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   G <span class="op">=</span> <span class="st">"C"</span>,</span>
+<span>                   stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat_D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X_1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_D</span>, mean <span class="op">=</span> <span class="fl">0.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_D</span>, mean <span class="op">=</span> <span class="fl">5.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   X_3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_D</span>, mean <span class="op">=</span> <span class="op">-</span><span class="fl">5.5</span>,  sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                   Z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n_D</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fl">.8</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="va">n_A</span>, size <span class="op">=</span> <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.4</span>, <span class="fl">.3</span>, <span class="fl">.2</span>, <span class="fl">.1</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span>, </span>
+<span>                                     MARGIN <span class="op">=</span> <span class="fl">2</span>, </span>
+<span>                                     FUN <span class="op">=</span> <span class="va">which</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   G <span class="op">=</span> <span class="st">"D"</span>,</span>
+<span>                   stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">dat_A</span>, <span class="va">dat_B</span>, <span class="va">dat_C</span>, <span class="va">dat_D</span><span class="op">)</span></span></code></pre></div>
+<p>The following plot shows the distribution of the continuous
+variables.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X_1"</span>, <span class="st">"X_2"</span>, <span class="st">"X_3"</span><span class="op">)</span>, </span>
+<span>               names_to <span class="op">=</span> <span class="st">"variable"</span>, </span>
+<span>               values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">G</span>, color <span class="op">=</span> <span class="va">G</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">variable</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="polymatching_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p>The distribution of the binary and categorical variables is
+represented below. The two figures show a good overlap in all of the
+variables.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Z"</span>, <span class="st">"W"</span><span class="op">)</span>, </span>
+<span>               names_to <span class="op">=</span> <span class="st">"variable"</span>, </span>
+<span>               values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">G</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">variable</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Group"</span>, y <span class="op">=</span> <span class="st">"N"</span>, fill <span class="op">=</span> <span class="st">"Value"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="polymatching_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 </div>
-  </main>
+<div class="section level2">
+<h2 id="getting-started-with-polymatch">Getting started with <code>polymatch</code><a class="anchor" aria-label="anchor" href="#getting-started-with-polymatch"></a>
+</h2>
+<p>The function <code>polymatch</code> can be used to generate matched
+sets with units that are similar with respect to the desired variables.
+In the simplest matched design, matched sets are made by one unit for
+each group. In the simulated dataset, this means creating quadruplets
+with one subject from each of the four groups. This is the default
+design of <code>polymatch</code>. The following code can be used to
+generate matched sets that are similar with respect to the three
+continuous variables
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>1</mn></msub><annotation encoding="application/x-tex">X_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>2</mn></msub><annotation encoding="application/x-tex">X_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>3</mn></msub><annotation encoding="application/x-tex">X_3</annotation></semantics></math>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">polymatching</span><span class="op">)</span></span>
+<span><span class="va">result_match_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/polymatch.html">polymatch</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span>, </span>
+<span>                        data <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                        distance <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Conditional optimal matching algorithm</span></span>
+<span><span class="co">## Number of observations:  2800 </span></span>
+<span><span class="co">## Number of groups:  4 </span></span>
+<span><span class="co">## Total distance of starting matched sample:  88.663 </span></span>
+<span><span class="co">## Ended iteration  1  - total distance: 87.388 </span></span>
+<span><span class="co">## Ended iteration  2  - total distance: 86.546 </span></span>
+<span><span class="co">## Ended iteration  3  - total distance: 86.246 </span></span>
+<span><span class="co">## Ended iteration  4  - total distance: 86.119 </span></span>
+<span><span class="co">## Ended iteration  5  - total distance: 86.057 </span></span>
+<span><span class="co">## Ended iteration  6  - total distance: 85.897 </span></span>
+<span><span class="co">## Ended iteration  7  - total distance: 85.871 </span></span>
+<span><span class="co">## End </span></span>
+<span><span class="co">## Number of iterations: 8, total distance:85.871</span></span>
+<span><span class="co">## Number of matched sets:  50</span></span></code></pre>
+<p>The output shows the total distance attained at each step of the
+iterative process. To identify the generated sets, the IDs of the
+matched sets can be added to the dataset as a new variable.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_1</span> <span class="op">&lt;-</span> <span class="va">result_match_1</span><span class="op">$</span><span class="va">match_id</span></span></code></pre></div>
+<p>We can check that each group is made of four units, one from each
+group. The number of matched sets is 10, as this is the size of the
+smallest group.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_1</span>, </span>
+<span>      <span class="va">dat</span><span class="op">$</span><span class="va">G</span>, </span>
+<span>      dnn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Match ID"</span>, <span class="st">"Group"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         Group</span></span>
+<span><span class="co">## Match ID A B C D</span></span>
+<span><span class="co">##        1 1 1 1 1</span></span>
+<span><span class="co">##        2 1 1 1 1</span></span>
+<span><span class="co">##        3 1 1 1 1</span></span>
+<span><span class="co">##        4 1 1 1 1</span></span>
+<span><span class="co">##        5 1 1 1 1</span></span>
+<span><span class="co">##        6 1 1 1 1</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="unbalanced-matched-sets">Unbalanced matched sets<a class="anchor" aria-label="anchor" href="#unbalanced-matched-sets"></a>
+</h2>
+<p>As the groups B, C and D are much larger than A, we can also match
+multiple subjects from B, C and D to each subject in A. This can be done
+with the parameter <code>vectorK</code> of the function.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_match_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/polymatch.html">polymatch</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span>, </span>
+<span>                        data <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                        distance <span class="op">=</span> <span class="st">"euclidean"</span>,</span>
+<span>                        vectorK <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span> <span class="op">=</span> <span class="fl">1</span>, </span>
+<span>                                    <span class="st">"B"</span> <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                                    <span class="st">"C"</span> <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                                    <span class="st">"D"</span> <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Conditional optimal matching algorithm</span></span>
+<span><span class="co">## Number of observations:  2800 </span></span>
+<span><span class="co">## Number of groups:  4 </span></span>
+<span><span class="co">## Total distance of starting matched sample:  180.687 </span></span>
+<span><span class="co">## Ended iteration  1  - total distance: 174.613 </span></span>
+<span><span class="co">## Ended iteration  2  - total distance: 172.622 </span></span>
+<span><span class="co">## Ended iteration  3  - total distance: 171.770 </span></span>
+<span><span class="co">## Ended iteration  4  - total distance: 171.084 </span></span>
+<span><span class="co">## Ended iteration  5  - total distance: 170.499 </span></span>
+<span><span class="co">## Ended iteration  6  - total distance: 170.457 </span></span>
+<span><span class="co">## Ended iteration  7  - total distance: 170.011 </span></span>
+<span><span class="co">## Ended iteration  8  - total distance: 169.903 </span></span>
+<span><span class="co">## End </span></span>
+<span><span class="co">## Number of iterations: 9, total distance:169.903</span></span>
+<span><span class="co">## Number of matched sets:  50</span></span></code></pre>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_2</span> <span class="op">&lt;-</span> <span class="va">result_match_2</span><span class="op">$</span><span class="va">match_id</span></span></code></pre></div>
+<p>Now, each unit from A is matched to 2 units from B and to 3 units
+from C and D.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_1</span>, </span>
+<span>      <span class="va">dat</span><span class="op">$</span><span class="va">G</span>, </span>
+<span>      dnn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Match ID"</span>, <span class="st">"Group"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         Group</span></span>
+<span><span class="co">## Match ID A B C D</span></span>
+<span><span class="co">##        1 1 1 1 1</span></span>
+<span><span class="co">##        2 1 1 1 1</span></span>
+<span><span class="co">##        3 1 1 1 1</span></span>
+<span><span class="co">##        4 1 1 1 1</span></span>
+<span><span class="co">##        5 1 1 1 1</span></span>
+<span><span class="co">##        6 1 1 1 1</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="exact-matching-constraints">Exact matching constraints<a class="anchor" aria-label="anchor" href="#exact-matching-constraints"></a>
+</h2>
+<p>It is possible to force the algorithm to match only the units that
+share the value of one variable (or multiple variables). This can be
+done with the <code>exactMatch</code> parameter. With the following
+code, only units with the same value in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+can be matched.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_match_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/polymatch.html">polymatch</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span>, </span>
+<span>                        data <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                        distance <span class="op">=</span> <span class="st">"euclidean"</span>,</span>
+<span>                        exactMatch <span class="op">=</span> <span class="op">~</span> <span class="va">Z</span> <span class="op">+</span> <span class="va">W</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Conditional optimal matching algorithm</span></span>
+<span><span class="co">## Number of observations:  2800 </span></span>
+<span><span class="co">## Number of groups:  4 </span></span>
+<span><span class="co">## Total distance of starting matched sample:  198.824 </span></span>
+<span><span class="co">## Ended iteration  1  - total distance: 193.142 </span></span>
+<span><span class="co">## Ended iteration  2  - total distance: 189.467 </span></span>
+<span><span class="co">## Ended iteration  3  - total distance: 187.170 </span></span>
+<span><span class="co">## Ended iteration  4  - total distance: 185.916 </span></span>
+<span><span class="co">## Ended iteration  5  - total distance: 185.225 </span></span>
+<span><span class="co">## End </span></span>
+<span><span class="co">## Number of iterations: 6, total distance:185.225</span></span>
+<span><span class="co">## Number of matched sets:  50</span></span></code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_3</span> <span class="op">&lt;-</span> <span class="va">result_match_3</span><span class="op">$</span><span class="va">match_id</span></span></code></pre></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

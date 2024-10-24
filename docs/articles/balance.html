@@ -60,9 +60,362 @@
     
     
 <div class="section level2">
-<h2 id="balance-in-matched-samples">Balance in matched samples<a class="anchor" aria-label="anchor" href="#balance-in-matched-samples"></a>
+<h2 id="evaluating-the-balance-in-matched-samples">Evaluating the balance in matched samples<a class="anchor" aria-label="anchor" href="#evaluating-the-balance-in-matched-samples"></a>
 </h2>
-<p>Text</p>
+<p>The package <code>polymatching</code> implements also functions to
+assess the balance in the variables of interest after matching. Consider
+the matched samples generated in the Polymatching tab. The following
+code can be used to assess the balance in all of the five variables of
+the dataset for the first matched set.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tabBalance_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/balance.html">balance</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span> <span class="op">+</span> <span class="va">Z</span> <span class="op">+</span> <span class="va">W</span>,</span>
+<span>                        match_id <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">match_id_1</span>,</span>
+<span>                        data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">tabBalance_1</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="8%">
+<col width="11%">
+<col width="15%">
+<col width="15%">
+<col width="16%">
+<col width="16%">
+<col width="17%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">groups</th>
+<th align="left">variable</th>
+<th align="left">type</th>
+<th align="right">stdzDiffPre</th>
+<th align="right">ratioVarsPre</th>
+<th align="right">stdzDiffPost</th>
+<th align="right">ratioVarsPost</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">A-B</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">0.013</td>
+<td align="right">1.190</td>
+<td align="right">0.005</td>
+<td align="right">1.000</td>
+</tr>
+<tr class="even">
+<td align="left">A-C</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">0.569</td>
+<td align="right">1.142</td>
+<td align="right">0.034</td>
+<td align="right">1.034</td>
+</tr>
+<tr class="odd">
+<td align="left">A-D</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">-0.507</td>
+<td align="right">1.065</td>
+<td align="right">0.000</td>
+<td align="right">1.051</td>
+</tr>
+<tr class="even">
+<td align="left">B-C</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">0.532</td>
+<td align="right">1.042</td>
+<td align="right">0.027</td>
+<td align="right">1.034</td>
+</tr>
+<tr class="odd">
+<td align="left">B-D</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">-0.498</td>
+<td align="right">1.118</td>
+<td align="right">-0.005</td>
+<td align="right">1.051</td>
+</tr>
+<tr class="even">
+<td align="left">C-D</td>
+<td align="left">X_1</td>
+<td align="left">continuous</td>
+<td align="right">-1.051</td>
+<td align="right">1.072</td>
+<td align="right">-0.033</td>
+<td align="right">1.017</td>
+</tr>
+<tr class="odd">
+<td align="left">A-B</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">0.122</td>
+<td align="right">1.226</td>
+<td align="right">-0.013</td>
+<td align="right">1.054</td>
+</tr>
+<tr class="even">
+<td align="left">A-C</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">0.686</td>
+<td align="right">1.224</td>
+<td align="right">-0.006</td>
+<td align="right">1.016</td>
+</tr>
+<tr class="odd">
+<td align="left">A-D</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">-0.359</td>
+<td align="right">1.316</td>
+<td align="right">-0.031</td>
+<td align="right">1.142</td>
+</tr>
+<tr class="even">
+<td align="left">B-C</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">0.538</td>
+<td align="right">1.002</td>
+<td align="right">0.006</td>
+<td align="right">1.071</td>
+</tr>
+<tr class="odd">
+<td align="left">B-D</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">-0.456</td>
+<td align="right">1.073</td>
+<td align="right">-0.018</td>
+<td align="right">1.084</td>
+</tr>
+<tr class="even">
+<td align="left">C-D</td>
+<td align="left">X_2</td>
+<td align="left">continuous</td>
+<td align="right">-0.985</td>
+<td align="right">1.075</td>
+<td align="right">-0.024</td>
+<td align="right">1.160</td>
+</tr>
+<tr class="odd">
+<td align="left">A-B</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">-0.233</td>
+<td align="right">1.053</td>
+<td align="right">-0.031</td>
+<td align="right">1.087</td>
+</tr>
+<tr class="even">
+<td align="left">A-C</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">-0.773</td>
+<td align="right">1.003</td>
+<td align="right">-0.072</td>
+<td align="right">1.194</td>
+</tr>
+<tr class="odd">
+<td align="left">A-D</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">0.256</td>
+<td align="right">1.058</td>
+<td align="right">-0.042</td>
+<td align="right">1.086</td>
+</tr>
+<tr class="even">
+<td align="left">B-C</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">-0.550</td>
+<td align="right">1.056</td>
+<td align="right">-0.043</td>
+<td align="right">1.099</td>
+</tr>
+<tr class="odd">
+<td align="left">B-D</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">0.489</td>
+<td align="right">1.114</td>
+<td align="right">-0.012</td>
+<td align="right">1.001</td>
+</tr>
+<tr class="even">
+<td align="left">C-D</td>
+<td align="left">X_3</td>
+<td align="left">continuous</td>
+<td align="right">1.017</td>
+<td align="right">1.055</td>
+<td align="right">0.030</td>
+<td align="right">1.100</td>
+</tr>
+<tr class="odd">
+<td align="left">A-B</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">-0.099</td>
+<td align="right">NA</td>
+<td align="right">-0.201</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">A-C</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">0.501</td>
+<td align="right">NA</td>
+<td align="right">0.616</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">A-D</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">-0.859</td>
+<td align="right">NA</td>
+<td align="right">-0.812</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">B-C</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">0.607</td>
+<td align="right">NA</td>
+<td align="right">0.832</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">B-D</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">-0.745</td>
+<td align="right">NA</td>
+<td align="right">-0.584</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">C-D</td>
+<td align="left">Z</td>
+<td align="left">binary</td>
+<td align="right">-1.537</td>
+<td align="right">NA</td>
+<td align="right">-1.615</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">A-B</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.342</td>
+<td align="right">NA</td>
+<td align="right">0.675</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">A-C</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.173</td>
+<td align="right">NA</td>
+<td align="right">0.372</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">A-D</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.331</td>
+<td align="right">NA</td>
+<td align="right">0.420</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">B-C</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.449</td>
+<td align="right">NA</td>
+<td align="right">0.865</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">B-D</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.390</td>
+<td align="right">NA</td>
+<td align="right">0.350</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">C-D</td>
+<td align="left">W</td>
+<td align="left">categorical</td>
+<td align="right">0.453</td>
+<td align="right">NA</td>
+<td align="right">0.582</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<p>The table provides the standardized mean differences (SMDs) comparing
+each pair of groups, before and after matching, in terms of all of the
+listed variables. For continuous variables, the table also provides the
+ratio of the variances before and after matching. SMDs less than 10% are
+generally considered as negligible differences. The table above show
+that between-group differences have much decreased after matching for
+all variables that were taken into account in the matching step
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>1</mn></msub><annotation encoding="application/x-tex">X_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>2</mn></msub><annotation encoding="application/x-tex">X_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>3</mn></msub><annotation encoding="application/x-tex">X_3</annotation></semantics></math>).
+The balance in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>,
+which were not taken into account to generate the first matched sample,
+is very poor. The same output can be shown graphically with the
+following code.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotBalance.html">plotBalance</a></span><span class="op">(</span><span class="va">tabBalance_1</span>, </span>
+<span>            boxplots <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>            ratioVariances <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="balance_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<pre><code><span><span class="co">## $plotStdzDiff</span></span></code></pre>
+<p><img src="balance_files/figure-html/unnamed-chunk-3-2.png" width="700"></p>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## $plotRatioVars</span></span></code></pre>
+<p><img src="balance_files/figure-html/unnamed-chunk-3-3.png" width="700"></p>
+<p>Notably, when considering the balance of the matched set where the
+variables
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+were exactly matched, it is possible to observe a perfect balance in the
+variables
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+and a worse balance in the other variables.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tabBalance_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/balance.html">balance</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span> <span class="op">+</span> <span class="va">Z</span> <span class="op">+</span> <span class="va">W</span>,</span>
+<span>                        match_id <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">match_id_3</span>,</span>
+<span>                        data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotBalance.html">plotBalance</a></span><span class="op">(</span><span class="va">tabBalance_3</span>, </span>
+<span>            boxplots <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>            ratioVariances <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="balance_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<pre><code><span><span class="co">## $plotStdzDiff</span></span></code></pre>
+<p><img src="balance_files/figure-html/unnamed-chunk-4-2.png" width="700"></p>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## $plotRatioVars</span></span></code></pre>
+<p><img src="balance_files/figure-html/unnamed-chunk-4-3.png" width="700"></p>
 </div>
   </main>
 </div>

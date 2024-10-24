@@ -15,12 +15,12 @@ To show the functionalities of the `polymatching` package, let's start by genera
 
 ```{r}
 #Set seed for reproducibility of results
-set.seed(123)
+set.seed(1234)
 
 #Group sizes
-n_A <- 10
-n_B <- 100
-n_C <- n_D <- 200
+n_A <- 50
+n_B <- 750
+n_C <- n_D <- 1000
 
 #Generate variables separately for each group
 dat_A <- data.frame(X_1 = rnorm(n_A, mean = 0,  sd = 1), 
@@ -115,9 +115,9 @@ dat$match_id_1 <- result_match_1$match_id
 We can check that each group is made of four units, one from each group. The number of matched sets is 10, as this is the size of the smallest group. 
 
 ```{r}
-table(dat$match_id_1, 
+head(table(dat$match_id_1, 
       dat$G, 
-      dnn = c("Match ID", "Group"))
+      dnn = c("Match ID", "Group")))
 ```
 
 ## Unbalanced matched sets
@@ -138,9 +138,9 @@ dat$match_id_2 <- result_match_2$match_id
 Now, each unit from A is matched to 2 units from B and to 3 units from C and D.
 
 ```{r}
-table(dat$match_id_1, 
+head(table(dat$match_id_1, 
       dat$G, 
-      dnn = c("Match ID", "Group"))
+      dnn = c("Match ID", "Group")))
 ```
 
 ## Exact matching constraints
@@ -155,11 +155,3 @@ result_match_3 <- polymatch(G ~ X_1 + X_2 + X_3,
 dat$match_id_3 <- result_match_3$match_id
 ```
 
-For example, it is possible to check that all matched units share the value of $Z$. 
-
-```{r}
-table(dat$match_id_3, 
-      dat$G, 
-      dat$Z,
-      dnn = c("Match ID", "Group", "Z"))
-```
