@@ -60,10 +60,46 @@
     
     
 <div class="section level2">
+<h2 id="the-algorithm-a-brief-overview">The algorithm: a brief overview<a class="anchor" aria-label="anchor" href="#the-algorithm-a-brief-overview"></a>
+</h2>
+<p>The polymatching algorithm is organized in two main stages. First, a
+starting matched sample is generated to initialize the algorithm.
+Second, an iterative procedure is applied to reduce the distance within
+matched sets, thus improving the quality of the solution.</p>
+<p>For the initialization of the first matched sample, this package
+implements a sequential strategy. The units of the first two groups are
+optimally matched. Then, the units from the third group are optimally
+matched to the existing pairs. The units from the fourth group are then
+optimally matched to the existing triplets, and so on. Note that, at
+each step, the existing two-group optimal matching procedure can be
+applied because each problem can be addressed by a two-group matching
+algorithm (matching units to fixed pairs, units to fixed triplets and so
+on). The order of the considered groups can be specified by the user or,
+by default, is based on their size, sequentially matching groups from
+the smallest to the largest. Furthermore, the package enables user to
+provide any given matched set as starting point, so that the algorithm
+can explore any improvement in terms of total distance.</p>
+<p>The second stage of the algorithm is the iterative procedure. For
+example, with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+groups, the algorithm starts by relaxing the linkage with the first
+group and the units of this group are rematched to the fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(K-1)</annotation></semantics></math>-uples.
+The procedure is repeated for each of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+groups and the attained total distance is recorded. If any newly
+generated matched set improves the total distance, the matched sample
+attaining the smallest total distance is selected and the iterations
+continue. Again, the linkage to each group is sequentially relaxed and
+possible reductions in the total distance are explored. The algorithm
+stops when no improvement in the total distance is found.</p>
+</div>
+<div class="section level2">
 <h2 id="a-toy-dataset">A toy dataset<a class="anchor" aria-label="anchor" href="#a-toy-dataset"></a>
 </h2>
-<p>To show the functionalities of the <code>polymatching</code> package,
-let’s start by generating a toy dataset with 3 continuous variables
+<p>To showcase the functionalities of the <code>polymatching</code>
+package, let’s start by generating a toy dataset with 3 continuous
+variables
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>1</mn></msub><annotation encoding="application/x-tex">X_1</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mn>2</mn></msub><annotation encoding="application/x-tex">X_2</annotation></semantics></math>
 and
@@ -249,17 +285,17 @@ with the parameter <code>vectorK</code> of the function.</p>
 <p>Now, each unit from A is matched to 2 units from B and to 3 units
 from C and D.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_1</span>, </span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_2</span>, </span>
 <span>      <span class="va">dat</span><span class="op">$</span><span class="va">G</span>, </span>
 <span>      dnn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Match ID"</span>, <span class="st">"Group"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##         Group</span></span>
 <span><span class="co">## Match ID A B C D</span></span>
-<span><span class="co">##        1 1 1 1 1</span></span>
-<span><span class="co">##        2 1 1 1 1</span></span>
-<span><span class="co">##        3 1 1 1 1</span></span>
-<span><span class="co">##        4 1 1 1 1</span></span>
-<span><span class="co">##        5 1 1 1 1</span></span>
-<span><span class="co">##        6 1 1 1 1</span></span></code></pre>
+<span><span class="co">##        1 1 2 3 3</span></span>
+<span><span class="co">##        2 1 2 3 3</span></span>
+<span><span class="co">##        3 1 2 3 3</span></span>
+<span><span class="co">##        4 1 2 3 3</span></span>
+<span><span class="co">##        5 1 2 3 3</span></span>
+<span><span class="co">##        6 1 2 3 3</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="exact-matching-constraints">Exact matching constraints<a class="anchor" aria-label="anchor" href="#exact-matching-constraints"></a>
@@ -291,6 +327,99 @@ can be matched.</p>
 <span><span class="co">## Number of matched sets:  50</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_3</span> <span class="op">&lt;-</span> <span class="va">result_match_3</span><span class="op">$</span><span class="va">match_id</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="propensity-score-matching">Propensity score matching<a class="anchor" aria-label="anchor" href="#propensity-score-matching"></a>
+</h2>
+<p>A popular strategy to balance multiple covariates is to match on the
+propensity score. In the two-group setting, it is defined as the
+probability of receiving the treatment or exposure of interest and is
+commonly estimated through logistic regression. With multiple treatment
+groups, it is defined as the vector of probabilities of receiving each
+treatment and is generally estimated through a multinomial logistic
+model.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.auckland.ac.nz/~yee/VGAM/" class="external-link">VGAM</a></span><span class="op">)</span></span>
+<span><span class="va">psModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/VGAM/man/vglm.html" class="external-link">vglm</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">X_1</span> <span class="op">+</span> <span class="va">X_2</span> <span class="op">+</span> <span class="va">X_3</span> <span class="op">+</span> <span class="va">Z</span> <span class="op">+</span> <span class="va">W</span>,</span>
+<span>                family <span class="op">=</span> <span class="va">multinomial</span>, </span>
+<span>                data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">psModel</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Call:</span></span>
+<span><span class="co">## vglm(formula = G ~ X_1 + X_2 + X_3 + Z + W, family = multinomial, </span></span>
+<span><span class="co">##     data = dat)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Coefficients: </span></span>
+<span><span class="co">##               Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
+<span><span class="co">## (Intercept):1  2.06469    1.10818   1.863  0.06244 .  </span></span>
+<span><span class="co">## (Intercept):2  5.51731    0.45581  12.105  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept):3  9.50965    0.53096  17.910  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_1:1         -1.02026    0.15302  -6.668 2.60e-11 ***</span></span>
+<span><span class="co">## X_1:2         -0.59617    0.05961 -10.000  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_1:3         -1.06896    0.07168 -14.913  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_2:1         -0.38721    0.15348  -2.523  0.01164 *  </span></span>
+<span><span class="co">## X_2:2         -0.54746    0.06059  -9.035  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_2:3         -0.98895    0.07211 -13.714  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_3:1          0.43436    0.15035   2.889  0.00387 ** </span></span>
+<span><span class="co">## X_3:2          0.48762    0.05869   8.309  &lt; 2e-16 ***</span></span>
+<span><span class="co">## X_3:3          0.90711    0.07007  12.946  &lt; 2e-16 ***</span></span>
+<span><span class="co">## Z1:1          -1.76926    0.30515  -5.798 6.71e-09 ***</span></span>
+<span><span class="co">## Z1:2          -1.44146    0.12341 -11.680  &lt; 2e-16 ***</span></span>
+<span><span class="co">## Z1:3          -2.70446    0.14623 -18.495  &lt; 2e-16 ***</span></span>
+<span><span class="co">## W2:1           0.74380    0.38497   1.932  0.05334 .  </span></span>
+<span><span class="co">## W2:2           0.94372    0.14976   6.302 2.95e-10 ***</span></span>
+<span><span class="co">## W2:3           1.04912    0.19620   5.347 8.93e-08 ***</span></span>
+<span><span class="co">## W3:1           0.40365    0.42168   0.957  0.33844    </span></span>
+<span><span class="co">## W3:2           0.96044    0.15184   6.325 2.53e-10 ***</span></span>
+<span><span class="co">## W3:3           1.53118    0.18787   8.150 3.63e-16 ***</span></span>
+<span><span class="co">## W4:1           1.31575    0.43265   3.041  0.00236 ** </span></span>
+<span><span class="co">## W4:2           1.79106    0.18072   9.911  &lt; 2e-16 ***</span></span>
+<span><span class="co">## W4:3           3.14656    0.20647  15.240  &lt; 2e-16 ***</span></span>
+<span><span class="co">## ---</span></span>
+<span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Names of linear predictors: log(mu[,1]/mu[,4]), log(mu[,2]/mu[,4]), </span></span>
+<span><span class="co">## log(mu[,3]/mu[,4])</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Residual deviance: 4433.518 on 8376 degrees of freedom</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Log-likelihood: -2216.759 on 8376 degrees of freedom</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Number of Fisher scoring iterations: 6 </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## No Hauck-Donner effect found in any of the estimates</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Reference group is level  4  of the response</span></span></code></pre>
+<p>With 4 groups, the model estimates 4 probabilities and 3 logits
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>A</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>D</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">log(P(G='A')/P(G='D'))</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>B</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>D</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">log(P(G='B')/P(G='D'))</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>C</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>G</mi><mo>=</mo><mi>′</mi><mi>D</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">log(P(G='C')/P(G='D'))</annotation></semantics></math>).
+Units are generally matched on the logits of the propensity score.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">logitPS</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">psModel</span>, type <span class="op">=</span> <span class="st">"link"</span><span class="op">)</span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">logit_AvsD</span> <span class="op">&lt;-</span> <span class="va">logitPS</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">logit_BvsD</span> <span class="op">&lt;-</span> <span class="va">logitPS</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">logit_CvsD</span> <span class="op">&lt;-</span> <span class="va">logitPS</span><span class="op">[</span>,<span class="fl">3</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">result_match_4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/polymatch.html">polymatch</a></span><span class="op">(</span><span class="va">G</span> <span class="op">~</span> <span class="va">logit_AvsD</span> <span class="op">+</span> <span class="va">logit_BvsD</span> <span class="op">+</span> <span class="va">logit_CvsD</span>, </span>
+<span>                            data <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>                            distance <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Conditional optimal matching algorithm</span></span>
+<span><span class="co">## Number of observations:  2800 </span></span>
+<span><span class="co">## Number of groups:  4 </span></span>
+<span><span class="co">## Total distance of starting matched sample:  72.488 </span></span>
+<span><span class="co">## Ended iteration  1  - total distance: 71.590 </span></span>
+<span><span class="co">## Ended iteration  2  - total distance: 70.647 </span></span>
+<span><span class="co">## Ended iteration  3  - total distance: 70.106 </span></span>
+<span><span class="co">## Ended iteration  4  - total distance: 69.072 </span></span>
+<span><span class="co">## Ended iteration  5  - total distance: 68.989 </span></span>
+<span><span class="co">## Ended iteration  6  - total distance: 68.946 </span></span>
+<span><span class="co">## Ended iteration  7  - total distance: 68.933 </span></span>
+<span><span class="co">## End </span></span>
+<span><span class="co">## Number of iterations: 8, total distance:68.933</span></span>
+<span><span class="co">## Number of matched sets:  50</span></span></code></pre>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">match_id_4</span> <span class="op">&lt;-</span> <span class="va">result_match_4</span><span class="op">$</span><span class="va">match_id</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

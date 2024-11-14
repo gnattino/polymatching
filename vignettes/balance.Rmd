@@ -91,21 +91,36 @@ tabBalance_1 <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
 knitr::kable(head(tabBalance_1, n = 12), digits = 3) 
 ```
 
-The table provides the standardized mean differences (SMDs) comparing each pair of groups, before and after matching, in terms of all of the listed variables. For continuous variables, the table also provides the ratio of the variances before and after matching. SMDs less than 10% are generally considered as negligible differences. The table above show that between-group differences have much decreased after matching for all variables that were taken into account in the matching step ($X_1$, $X_2$ and $X_3$). The balance in $Z$ and $W$, which were not taken into account to generate the first matched sample, is very poor. The same output can be shown graphically with the following code. 
+The table provides the standardized mean differences (SMDs) comparing each pair of groups, before and after matching, in terms of all of the listed variables. For continuous variables, the table also provides the ratio of the variances before and after matching. SMDs less than 10% are generally considered as negligible differences. The table above show that between-group differences have much decreased after matching for all variables that were taken into account in the matching step ($X_1$, $X_2$ and $X_3$). The balance in $Z$ and $W$, which were not taken into account to generate the first matched sample, is very poor. Plots to graphically show the same outputs can be produced with the following code. 
 
-```{r}
+```{r, fig.show='hide'}
 plot_1 <- plotBalance(tabBalance_1, 
                       boxplots = FALSE,
                       ratioVariances = TRUE)
 ```
 
-Notably, when considering the balance of the matched set where the variables $Z$ and $W$ were exactly matched, it is possible to observe a perfect balance in the variables $Z$ and $W$ and a worse balance in the other variables. 
+The plots of SMDs and the ratios of variances are distinct elements of the output.
 
 ```{r}
+#Standardized mean differences
+plot_1$plotStdzDiff
+  
+#Ratio of variances
+plot_1$plotRatioVars
+```
+
+Notably, when considering the balance of the matched set where the variables $Z$ and $W$ were exactly matched, it is possible to observe a perfect balance in the variables $Z$ and $W$ and a worse balance in the other variables. 
+
+```{r, fig.show='hide'}
 tabBalance_3 <- balance(G ~ X_1 + X_2 + X_3 + Z + W,
                         match_id = dat$match_id_3,
                         data = dat)
 plot_2 <- plotBalance(tabBalance_3, 
                       boxplots = FALSE,
                       ratioVariances = TRUE)
+```
+
+```{r}
+#Standardized mean differences
+plot_2$plotStdzDiff
 ```
