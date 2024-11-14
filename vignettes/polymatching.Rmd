@@ -9,9 +9,17 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE)
 ```
 
+## The algorithm: a brief overview
+
+The polymatching algorithm is organized in two main stages. First, a starting matched sample is generated to initialize the algorithm. Second, an iterative procedure is applied to reduce the distance within matched sets, thus improving the quality of the solution. 
+
+For the initialization of the first matched sample, this package implements a sequential strategy. The units of the first two groups are optimally matched. Then, the units from the third group are optimally matched to the existing pairs. The units from the fourth group are then optimally matched to the existing triplets, and so on. Note that, at each step, the existing two-group optimal matching procedure can be applied because each problem can be addressed by a two-group matching algorithm (matching units to fixed pairs, units to fixed triplets and so on). The order of the considered groups can be specified by the user or, by default, is based on their size, sequentially matching groups from the smallest to the largest. Furthermore, the package enables user to provide any given matched set as starting point, so that the algorithm can explore any improvement in terms of total distance. 
+
+The second stage of the algorithm is the iterative procedure. For example, with $K$ groups, the algorithm starts by relaxing the linkage with the first group and the units of this group are rematched to the fixed $(K-1)$-uples. The procedure is repeated for each of the $K$ groups and the attained total distance is recorded. If any newly generated matched set improves the total distance, the matched sample attaining the smallest total distance is selected and the iterations continue. Again, the linkage to each group is sequentially relaxed and possible reductions in the total distance are explored. The algorithm stops when no improvement in the total distance is found. 
+
 ## A toy dataset
 
-To show the functionalities of the `polymatching` package, let's start by generating a toy dataset with 3 continuous variables ($X_1$, $X_2$ and $X_3$), one binary variable ($Z$) and one categorical variable ($W$), with four levels. The units are divided in 4 groups, labeled as A, B, C and D, with different size ($n_A = 10$, $n_B = 100$, $n_C = n_D = 500$). Let $G$ be the name of the variable identifying the assigned group.
+To showcase the functionalities of the `polymatching` package, let's start by generating a toy dataset with 3 continuous variables ($X_1$, $X_2$ and $X_3$), one binary variable ($Z$) and one categorical variable ($W$), with four levels. The units are divided in 4 groups, labeled as A, B, C and D, with different size ($n_A = 10$, $n_B = 100$, $n_C = n_D = 500$). Let $G$ be the name of the variable identifying the assigned group.
 
 ```{r}
 #Set seed for reproducibility of results
@@ -138,7 +146,7 @@ dat$match_id_2 <- result_match_2$match_id
 Now, each unit from A is matched to 2 units from B and to 3 units from C and D.
 
 ```{r}
-head(table(dat$match_id_1, 
+head(table(dat$match_id_2, 
       dat$G, 
       dnn = c("Match ID", "Group")))
 ```
@@ -153,5 +161,31 @@ result_match_3 <- polymatch(G ~ X_1 + X_2 + X_3,
                         distance = "euclidean",
                         exactMatch = ~ Z + W)
 dat$match_id_3 <- result_match_3$match_id
+```
+
+## Propensity score matching
+
+A popular strategy to balance multiple covariates is to match on the propensity score. In the two-group setting, it is defined as the probability of receiving the treatment or exposure of interest and is commonly estimated through logistic regression. With multiple treatment groups, it is defined as the vector of probabilities of receiving each treatment and is generally estimated through a multinomial logistic model. 
+
+```{r}
+library(VGAM)
+psModel <- vglm(G ~ X_1 + X_2 + X_3 + Z + W,
+                family = multinomial, 
+                data = dat)
+summary(psModel)
+```
+
+With 4 groups, the model estimates 4 probabilities and 3 logits ($log(P(G='A')/P(G='D'))$, $log(P(G='B')/P(G='D'))$, $log(P(G='C')/P(G='D'))$). Units are generally matched on the logits of the propensity score.
+
+```{r}
+logitPS <- predict(psModel, type = "link")
+dat$logit_AvsD <- logitPS[,1]
+dat$logit_BvsD <- logitPS[,2]
+dat$logit_CvsD <- logitPS[,3]
+
+result_match_4 <- polymatch(G ~ logit_AvsD + logit_BvsD + logit_CvsD, 
+                            data = dat,
+                            distance = "euclidean")
+dat$match_id_4 <- result_match_4$match_id
 ```
 
