@@ -2,6 +2,7 @@
 % Please edit documentation in R/polymatching.R
 \docType{package}
 \name{polymatching}
+\alias{polymatching-package}
 \alias{polymatching}
 \title{Polymatching: Matching in Designs with Multiple Treatment Groups}
 \description{
@@ -33,3 +34,14 @@ in the study design. For 3, 4, 5 and 6 groups, there are
 The result of \code{\link{balance}} can be graphically represented with \code{\link{plotBalance}}.
 }
 
+\author{
+\strong{Maintainer}: Giovanni Nattino \email{giovanni.nattino@marionegri.it}
+
+Authors:
+\itemize{
+  \item Bo Lu
+  \item Chi Song
+  \item Henry Xiang
+}
+
+}

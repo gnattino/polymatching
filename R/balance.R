@@ -130,7 +130,7 @@ balance <- function(formulaBalance, match_id, data, weights_before = NULL, weigh
 
     varBalance <- varsBalance[indexVar]
 
-    if(class(data[,varBalance]) == "character") {
+    if(methods::is(data[,varBalance],"character")) {
       data[,varBalance] <- factor(data[,varBalance])
     }
 

@@ -2,13 +2,13 @@
 #' @keywords internal
 typeVariable <- function(variable) {
 
-  if(class(variable) %in% c("numeric","integer")) {
+  if(methods::is(variable, "numeric") | methods::is(variable, "integer")) {
 
     type <- "continuous"
 
   } else {
 
-    if(class(variable)=="factor") {
+    if(methods::is(variable, "factor")) {
 
       if(length(levels(variable))<=2) {
 
@@ -91,14 +91,14 @@ balanceBinVar <- function(data, varBalance, match_id, varGroup, pairGroups, varW
   dataMatch <- data[data[,varGroup] %in% pairGroups & !is.na(match_id), ]
   infoMatch <- dataMatch %>%
     dplyr::group_by(!!varGroup_symbol) %>%
-    dplyr::summarize(means = stats::weighted.mean(x = varBalanceNum, w = !!varWeights_symbol))
+    dplyr::summarize(means = stats::weighted.mean(x = .data$varBalanceNum, w = !!varWeights_symbol))
 
   #For variances, unmatched data
   dataUnm <- data[data[,varGroup] %in% pairGroups, ]
   infoUnm <- dataUnm %>%
     dplyr::group_by(!!varGroup_symbol) %>%
-    dplyr::summarize(means = stats::weighted.mean(x = varBalanceNum, w = !!varWeights_symbol)) %>%
-    dplyr::mutate(vars = means * (1 - means))
+    dplyr::summarize(means = stats::weighted.mean(x = .data$varBalanceNum, w = !!varWeights_symbol)) %>%
+    dplyr::mutate(vars = .data$means * (1 - .data$means))
 
   stdzDiff <- (infoMatch$means[infoMatch[,varGroup]==pairGroups[1]] - infoMatch$means[infoMatch[,varGroup]==pairGroups[2]])/(
                sqrt((infoUnm$vars[infoUnm[,varGroup]==pairGroups[1]] + infoUnm$vars[infoUnm[,varGroup]==pairGroups[2]])/2))

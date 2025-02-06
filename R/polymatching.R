@@ -23,6 +23,5 @@
 #' 3, 6, 10 and 15 pairs of groups and the balance is evaluated before and after matching.
 #' The result of \code{\link{balance}} can be graphically represented with \code{\link{plotBalance}}.
 #'
-#' @docType package
 #' @name polymatching
-NULL
+"_PACKAGE"

@@ -1,7 +1,7 @@
 Package: polymatching
 Type: Package
 Title: A Matching Algorithm for Designs with Multiple Groups 
-Version: 0.9.0
+Version: 1.0.0
 Authors@R: c(
     person("Giovanni", "Nattino", email = "giovanni.nattino@marionegri.it", role = c("aut", "cre")),
     person("Bo", "Lu", role = "aut"),
@@ -12,6 +12,6 @@ Description: Includes functions implementing the conditionally optimal matching 
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
-Imports: optmatch, ggplot2, gridExtra, tidyr, utils, stats, dplyr, magrittr
+Imports: optmatch, ggplot2, gridExtra, tidyr, utils, stats, dplyr, magrittr, rlang, methods
 Suggests: VGAM, knitr, rmarkdown
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
